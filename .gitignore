@@ -1,0 +1,8 @@
+# Non-static website directories
+Java/
+Python/
+markdown/
+
+# OS files
+.DS_Store
+Thumbs.db

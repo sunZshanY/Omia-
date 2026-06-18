@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omiaちゃん的小博客</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 背景图片层 -->
+    <div class="bg-layer" id="bgLayer"></div>
+    <!-- 背景遮罩层 -->
+    <div class="bg-overlay"></div>
+
+    <!-- 管理员面板 -->
+    <div id="adminPanel" class="admin-panel hidden">
+        <span class="admin-label">管理员身份登录</span>
+        <button id="logoutBtn" class="logout-btn">退出登录</button>
+    </div>
+
+    <!-- 内容层 -->
+    <div class="content">
+        <!-- 标题区域 -->
+        <header class="header">
+            <div class="logo-container">
+                <img src="images/Clion.png" alt="Clion Logo" class="logo" title="这是我喜欢的IDE">
+            </div>
+            <h1 class="typing-effect">
+                <span id="typed-text"></span>
+                <span class="cursor">|</span>
+            </h1>
+            <p class="subtitle">欢迎来到我的博客</p>
+        </header>
+
+        <!-- 导航菜单 -->
+        <nav class="nav-menu">
+            <ul>
+                <li><button class="nav-btn active" data-target="blog">博客内容</button></li>
+                <li><button class="nav-btn" data-target="projects">个人项目</button></li>
+                <li><button class="nav-btn disabled" data-target="friends">友链</button></li>
+                <li><button class="nav-btn" data-target="about">个人简介</button></li>
+            </ul>
+        </nav>
+
+        <!-- 内容区域 -->
+        <main class="main-content">
+            <!-- 博客内容 -->
+            <section id="blog" class="content-section active">
+                <div class="section-header">
+                    <h2>博客内容</h2>
+                    <button id="addBlogBtn" class="add-blog-btn hidden">发布新博客</button>
+                </div>
+                <div class="blog-list" id="blogList">
+                </div>
+            </section>
+
+            <!-- 个人项目 -->
+            <section id="projects" class="content-section">
+                <h2>个人项目开发</h2>
+                
+                <div class="project-card">
+                    <div class="project-header">
+                        <h4>WEB_TODO</h4>
+                        <a href="https://sunzshany.github.io/TODO/" class="action-btn demo-btn" target="_blank">
+                            <span></span> 立即体验
+                        </a>
+                    </div>
+                    <p class="project-desc">运用 HTML、CSS、JavaScript 以及 Python 等技术开发的 TODO 事项管理工具，支持任务的增删改查和分类管理。</p>
+                    <div class="project-tags">
+                        <span class="tag">HTML</span>
+                        <span class="tag">CSS</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">Python</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-header">
+                        <h4>TODO_DEMO</h4>
+                        <a href="download/todo_demo.zip" class="action-btn download-btn" download>
+                            <span>⬇️</span> 下载源码
+                        </a>
+                    </div>
+                    <p class="project-desc">功能完整的 TODO 事项管理工具，Python 作为后端提供 RESTful API，Java Swing 作为桌面客户端，支持任务管理、智能分类和时间提醒功能。</p>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">Java</span>
+                        <span class="tag">Flask框架</span>
+                        <span class="tag">Swing框架</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 友链 -->
+            <section id="friends" class="content-section">
+                <h2>🔗 友链</h2>
+                <div class="empty-state">
+                    <div class="empty-icon">🔗</div>
+                    <p>暂未添加友链，敬请期待...</p>
+                </div>
+            </section>
+
+            <!-- 个人简介 -->
+            <section id="about" class="content-section">
+                <h2>👤 个人简介</h2>
+                <img src="images/images1.jpg" alt="Omiaちゃん" class="profile-image">
+                <p>Hello Everyone，我是Omiaちゃん，一名的中职生，とでも普通の中职生，爱好是写代码、玩FPS类游戏、乌蒙DX等.....</p>
+                
+                <div class="skills-section">
+                    <h3>💻 喜欢的编程语言</h3>
+                    <div class="skill-list">
+                        <div class="skill-item">
+                            <span class="skill-rank">🥇</span>
+                            <span class="skill-name">Python</span>
+                            <span class="skill-desc">简洁优雅，强大灵活</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-rank">🥈</span>
+                            <span class="skill-name">C++</span>
+                            <span class="skill-desc">高性能系统开发</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-rank">🥉</span>
+                            <span class="skill-name">Java</span>
+                            <span class="skill-desc">跨平台企业级开发</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-rank">4️⃣</span>
+                            <span class="skill-name">JavaScript</span>
+                            <span class="skill-desc">Web前端核心语言</span>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-rank">5️⃣</span>
+                            <span class="skill-name">PHP</span>
+                            <span class="skill-desc">服务器端脚本语言</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部信息 -->
+        <footer class="footer">
+            <div class="hidden-login" id="hiddenLogin" onclick="openModal('loginModal')">
+                Omia.inc
+            </div>
+            <div class="footer-info">
+                萌ICP1145141919
+            </div>
+        </footer>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 管理员登录</h3>
+                <button class="close-modal" onclick="closeModal('loginModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码">
+                </div>
+                <div class="error-message" id="loginError"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('loginModal')">取消</button>
+                <button class="btn-submit" onclick="adminLogin()">登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 博客编辑弹窗 -->
+    <div id="blogModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="blogModalTitle">✏️ 发布新博客</h3>
+                <button class="close-modal" onclick="closeModal('blogModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="blogId">
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" id="blogTitle" placeholder="请输入博客标题">
+                </div>
+                <div class="form-group">
+                    <label>日期</label>
+                    <input type="date" id="blogDate">
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="blogContent" rows="4" placeholder="请输入博客内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>标签（用逗号分隔）</label>
+                    <input type="text" id="blogTags" placeholder="例如：Python, Flask">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('blogModal')">取消</button>
+                <button class="btn-submit" onclick="saveBlog()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 管理员配置 ====================
+        const ADMIN_USERNAME = 'sunomia';
+        const ADMIN_PASSWORD = '1266shanyu';
+
+        // ==================== 初始博客数据 ====================
+        const defaultBlogs = [
+            {
+                id: 1,
+                title: 'Python学习笔记 - Flask框架入门',
+                date: '2026-06-18',
+                content: '记录了学习Flask框架的心得，包括路由配置、模板渲染、数据库操作等基础内容...',
+                tags: ['Python', 'Flask']
+            },
+            {
+                id: 2,
+                title: '前端开发总结 - CSS毛玻璃效果',
+                date: '2026-06-15',
+                content: '分享了如何使用backdrop-filter实现精美的毛玻璃效果，以及在不同浏览器中的兼容性处理...',
+                tags: ['CSS', '前端']
+            },
+            {
+                id: 3,
+                title: 'Java Swing GUI开发入门',
+                date: '2026-06-10',
+                content: '介绍了使用Java Swing创建桌面应用程序的基本步骤，包括窗口布局、组件使用等...',
+                tags: ['Java', 'GUI']
+            }
+        ];
+
+        // ==================== 状态管理 ====================
+        let blogs = [];
+        let isAdminLoggedIn = false;
+
+        // ==================== 初始化 ====================
+        function init() {
+            loadBlogs();
+            checkLoginStatus();
+            renderBlogs();
+        }
+
+        // ==================== 数据存储 ====================
+        function loadBlogs() {
+            const stored = localStorage.getItem('blogs');
+            if (stored) {
+                blogs = JSON.parse(stored);
+            } else {
+                blogs = [...defaultBlogs];
+                localStorage.setItem('blogs', JSON.stringify(blogs));
+            }
+        }
+
+        function saveBlogs() {
+            localStorage.setItem('blogs', JSON.stringify(blogs));
+        }
+
+        // ==================== 登录验证 ====================
+        function checkLoginStatus() {
+            isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            updateAdminUI();
+        }
+
+        function updateAdminUI() {
+            const adminPanel = document.getElementById('adminPanel');
+            const addBlogBtn = document.getElementById('addBlogBtn');
+            const hiddenLogin = document.getElementById('hiddenLogin');
+
+            if (isAdminLoggedIn) {
+                adminPanel.classList.remove('hidden');
+                addBlogBtn.classList.remove('hidden');
+                hiddenLogin.classList.add('hidden');
+            } else {
+                adminPanel.classList.add('hidden');
+                addBlogBtn.classList.add('hidden');
+                hiddenLogin.classList.remove('hidden');
+            }
+            renderBlogs();
+        }
+
+        function adminLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const error = document.getElementById('loginError');
+
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                updateAdminUI();
+                closeModal('loginModal');
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                error.textContent = '';
+            } else {
+                error.textContent = '❌ 用户名或密码错误';
+            }
+        }
+
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            localStorage.removeItem('isAdminLoggedIn');
+            updateAdminUI();
+        }
+
+        // ==================== 模态框操作 ====================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // ==================== 博客CRUD ====================
+        function renderBlogs() {
+            const blogList = document.getElementById('blogList');
+            blogList.innerHTML = '';
+
+            blogs.forEach(blog => {
+                const card = document.createElement('article');
+                card.className = 'blog-card';
+                
+                let tagsHtml = blog.tags.map(tag => `<span class="blog-tag">${tag}</span>`).join('');
+                
+                let editButtons = '';
+                if (isAdminLoggedIn) {
+                    editButtons = `
+                        <div class="blog-actions">
+                            <button class="edit-btn" onclick="editBlog(${blog.id})">✏️</button>
+                            <button class="delete-btn" onclick="deleteBlog(${blog.id})">🗑️</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="blog-date">${blog.date}</div>
+                    <h3>${blog.title}</h3>
+                    <p>${blog.content}</p>
+                    ${tagsHtml}
+                    ${editButtons}
+                `;
+                
+                blogList.appendChild(card);
+            });
+        }
+
+        function openAddBlog() {
+            document.getElementById('blogModalTitle').textContent = '✏️ 发布新博客';
+            document.getElementById('blogId').value = '';
+            document.getElementById('blogTitle').value = '';
+            document.getElementById('blogDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('blogContent').value = '';
+            document.getElementById('blogTags').value = '';
+            openModal('blogModal');
+        }
+
+        function editBlog(id) {
+            const blog = blogs.find(b => b.id === id);
+            if (!blog) return;
+
+            document.getElementById('blogModalTitle').textContent = '📝 编辑博客';
+            document.getElementById('blogId').value = blog.id;
+            document.getElementById('blogTitle').value = blog.title;
+            document.getElementById('blogDate').value = blog.date;
+            document.getElementById('blogContent').value = blog.content;
+            document.getElementById('blogTags').value = blog.tags.join(', ');
+            openModal('blogModal');
+        }
+
+        function saveBlog() {
+            const id = document.getElementById('blogId').value;
+            const title = document.getElementById('blogTitle').value.trim();
+            const date = document.getElementById('blogDate').value;
+            const content = document.getElementById('blogContent').value.trim();
+            const tags = document.getElementById('blogTags').value.split(/[,，]/).map(t => t.trim()).filter(t => t);
+
+            if (!title || !date || !content) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            if (id) {
+                const index = blogs.findIndex(b => b.id === parseInt(id));
+                if (index !== -1) {
+                    blogs[index] = { id: parseInt(id), title, date, content, tags };
+                }
+            } else {
+                const newId = blogs.length > 0 ? Math.max(...blogs.map(b => b.id)) + 1 : 1;
+                blogs.unshift({ id: newId, title, date, content, tags });
+            }
+
+            saveBlogs();
+            renderBlogs();
+            closeModal('blogModal');
+        }
+
+        function deleteBlog(id) {
+            if (confirm('确定要删除这篇博客吗？')) {
+                blogs = blogs.filter(b => b.id !== id);
+                saveBlogs();
+                renderBlogs();
+            }
+        }
+
+        // ==================== 事件绑定 ====================
+        document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+        document.getElementById('addBlogBtn').addEventListener('click', openAddBlog);
+
+        // ==================== 打字机效果 ====================
+        const text = "Hello My name is Omia";
+        const typedText = document.getElementById('typed-text');
+        let index = 0;
+
+        function type() {
+            if (index < text.length) {
+                typedText.textContent += text[index];
+                index++;
+                setTimeout(type, 150);
+            }
+        }
+
+        // ==================== 随机背景图片 ====================
+        const backgroundImages = [
+            'images/Clion.png',
+            'images/columbina-5k-3840x2160-25922.jpg',
+            'images/oshi-no-ko-3840x2160-25261.jpg',
+            'images/sparxie-honkai-star-3840x2160-26290.jpg',
+            'images/zhuang-fangyi-3840x2160-26226.jpg'
+        ];
+
+        const bgLayer = document.getElementById('bgLayer');
+
+        function setRandomBackground() {
+            if (backgroundImages.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+            const selectedImage = backgroundImages[randomIndex];
+            const img = new Image();
+            img.onload = function() {
+                bgLayer.style.backgroundImage = `url('${selectedImage}')`;
+            };
+            img.onerror = function() {
+                console.warn('背景图片加载失败:', selectedImage);
+            };
+            img.src = selectedImage;
+        }
+
+        // ==================== 导航切换 ====================
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) {
+                    return;
+                }
+
+                navBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const targetId = this.dataset.target;
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === targetId) {
+                        section.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // ==================== 页面加载 ====================
+        window.addEventListener('load', function() {
+            init();
+            type();
+            setRandomBackground();
+        });
+    </script>
+</body>
+</html>
