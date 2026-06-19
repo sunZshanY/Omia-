@@ -301,6 +301,12 @@
         .char-count.warning { color: #ffd700; }
         .char-count.danger  { color: #ff6b6b; }
 
+        /* 个人排行字体 - Segoe UI / 黑体 */
+        .skill-rank, .skill-name, .skill-desc,
+        .like-Linux .rank, .like-Linux .linux-name, .like-Linux .linux-desc {
+            font-family: 'Segoe UI', 'Microsoft YaHei', 'SimHei', '黑体', sans-serif;
+        }
+
         /* Linux发行版样式 */
         .like-Linux {
             display: flex;
@@ -319,7 +325,7 @@
             background: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
         }
-        .like-Linux .rank { font-size: 16px; }
+        .like-Linux .rank { font-size: 16px; font-weight: 600; }
         .like-Linux .linux-name {
             color: #fff;
             font-size: 16px;
