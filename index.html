@@ -71,14 +71,14 @@
                         <span class="tag">CSS</span>
                         <span class="tag">JavaScript</span>
                         <span class="tag">Python</span>
-                    </div>
+                    </div>·
                 </div>
 
                 <div class="project-card">
                     <div class="project-header">
                         <h4>TODO_DEMO</h4>
                         <a href="download/todo_demo.zip" class="action-btn download-btn" download>
-                            <span>⬇️</span> 下载源码
+                            <span></span> 下载源码（正在开发中。。。。。），您可以试用我们的web版本喵~
                         </a>
                     </div>
                     <p class="project-desc">功能完整的 TODO 事项管理工具，Python 作为后端提供 RESTful API，Java Swing 作为桌面客户端，支持任务管理、智能分类和时间提醒功能。</p>
@@ -107,7 +107,7 @@
                 <p>Hello Everyone，我是Omiaちゃん，一名的中职生，とでも普通の中职生，爱好是写代码、玩FPS类游戏、乌蒙DX等.....</p>
                 
                 <div class="skills-section">
-                    <h3>💻 喜欢的编程语言</h3>
+                    <h3>喜欢的编程语言</h3>
                     <div class="skill-list">
                         <div class="skill-item">
                             <span class="skill-rank">No.1</span>
@@ -301,7 +301,7 @@
                 document.getElementById('password').value = '';
                 error.textContent = '';
             } else {
-                error.textContent = '❌ 用户名或密码错误';
+                error.textContent = '❌ 管理员账号或密码错误';
             }
         }
 
@@ -356,7 +356,7 @@
         }
 
         function openAddBlog() {
-            document.getElementById('blogModalTitle').textContent = '✏️ 发布新博客';
+            document.getElementById('blogModalTitle').textContent = '发布新博客';
             document.getElementById('blogId').value = '';
             document.getElementById('blogTitle').value = '';
             document.getElementById('blogDate').value = new Date().toISOString().split('T')[0];
@@ -369,7 +369,7 @@
             const blog = blogs.find(b => b.id === id);
             if (!blog) return;
 
-            document.getElementById('blogModalTitle').textContent = '📝 编辑博客';
+            document.getElementById('blogModalTitle').textContent = '编辑博客';
             document.getElementById('blogId').value = blog.id;
             document.getElementById('blogTitle').value = blog.title;
             document.getElementById('blogDate').value = blog.date;
