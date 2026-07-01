@@ -10,6 +10,11 @@
     <meta property="og:description" content="分享编程学习、项目开发与日常生活的个人站点">
     <meta property="og:type" content="website">
     <title>Omiaちゃん的小博客</title>
+    <link rel="icon" href="images/Clion.png" type="image/png">
+    <!-- 引入 JetBrains Mono 字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -66,8 +71,11 @@
                     <!-- 动态渲染博客卡片 -->
                 </div>
                 <div id="blogEmpty" class="empty-state hidden">
-                    <div class="empty-icon">📝</div>
-                    <p>暂无博客文章</p>
+                    <div class="empty-icon">
+                        <img src="images/Clion.png" alt="clion test">
+                        <p class="empty-title">正在开发中</p>
+                        <p class="empty-subtitle">暂无博客文章......</p>
+                    </div>
                 </div>
             </section>
 
@@ -91,21 +99,6 @@
                     </div>
                 </div>
 
-                <div class="project-card">
-                    <div class="project-header">
-                        <h4>TODO_DEMO</h4>
-                        <a href="download/todo_demo.zip" class="action-btn download-btn" download>
-                            <span></span> 下载源码（正在开发中...）您可以试用我们的web版本喵~
-                        </a>
-                    </div>
-                    <p class="project-desc">功能完整的 TODO 事项管理工具，Python 作为后端提供 RESTful API，Java Swing 作为桌面客户端，支持任务管理、智能分类和时间提醒功能。</p>
-                    <div class="project-tags">
-                        <span class="tag">Python</span>
-                        <span class="tag">Java</span>
-                        <span class="tag">Flask框架</span>
-                        <span class="tag">Swing框架</span>
-                    </div>
-                </div>
             </section>
 
             <!-- 友链 -->
@@ -119,9 +112,9 @@
 
             <!-- 个人简介 -->
             <section id="about" class="content-section">
-                <h2>👤 个人简介</h2>
+                <h2> 个人简介喵~</h2>
                 <img src="images/images1.jpg" alt="Omiaちゃん" class="profile-image">
-                <p>Hello Everyone，我是Omiaちゃん，一名的中职生，とても普通の中职生，爱好是写代码、玩FPS类游戏、乌蒙DX等......</p>
+                <p>Hello Everyone，我是Omiaちゃん，一名普通の中职生，爱好是写代码、玩FPS类游戏、音游等......</p>
 
                 <div class="skills-section">
                     <h3>喜欢的编程语言</h3>
@@ -165,8 +158,11 @@
 
         <!-- 底部信息 -->
         <footer class="footer">
+            <div class="visitor-counter">
+                👁️ 今日浏览人数：<span id="visitorCount">0</span> 人
+            </div>
             <div class="hidden-login" id="hiddenLogin" onclick="openModal('loginModal')">
-                Omia.inc
+                        © sunZshanY.inc
             </div>
             <div class="footer-info">
                 萌ICP1145141919
@@ -178,7 +174,7 @@
     <div id="loginModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔐 管理员登录</h3>
+                <h3>管理员登录</h3>
                 <button class="close-modal" onclick="closeModal('loginModal')">×</button>
             </div>
             <div class="modal-body">
@@ -233,585 +229,7 @@
         </div>
     </div>
 
-    <!-- ==================== 新增内联样式（新增UI组件） ==================== -->
-    <style>
-        /* Toast 通知 */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-        .toast-item {
-            pointer-events: auto;
-            padding: 14px 28px;
-            border-radius: 30px;
-            font-size: 15px;
-            font-weight: bold;
-            color: #fff;
-            backdrop-filter: blur(15px);
-            animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s forwards;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            white-space: nowrap;
-        }
-        .toast-success { background: rgba(56, 239, 125, 0.85); border: 1px solid rgba(56, 239, 125, 0.5); }
-        .toast-error   { background: rgba(255, 80, 80, 0.85);  border: 1px solid rgba(255, 80, 80, 0.5); }
-        .toast-info    { background: rgba(102, 126, 234, 0.85); border: 1px solid rgba(102, 126, 234, 0.5); }
-        @keyframes toastIn  { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateY(0); }    to { opacity: 0; transform: translateY(-30px); } }
-
-        /* 博客搜索栏 */
-        .blog-search-bar {
-            margin-bottom: 25px;
-        }
-        .blog-search-bar input {
-            width: 100%;
-            padding: 14px 20px;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 30px;
-            color: #fff;
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        .blog-search-bar input::placeholder { color: rgba(255, 255, 255, 0.35); }
-        .blog-search-bar input:focus {
-            border-color: rgba(102, 126, 234, 0.6);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-            background: rgba(255, 255, 255, 0.18);
-        }
-
-        /* 字数统计 */
-        .char-count {
-            display: block;
-            text-align: right;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 12px;
-            margin-top: 6px;
-        }
-        .char-count.warning { color: #ffd700; }
-        .char-count.danger  { color: #ff6b6b; }
-
-        /* 个人排行字体 - Segoe UI / 黑体 */
-        .skill-rank, .skill-name, .skill-desc,
-        .like-Linux .rank, .like-Linux .linux-name, .like-Linux .linux-desc {
-            font-family: 'Segoe UI', 'Microsoft YaHei', 'SimHei', '黑体', sans-serif;
-        }
-
-        /* Linux发行版样式 */
-        .like-Linux {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px 20px;
-            margin: 8px auto;
-            max-width: 420px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            transition: all 0.3s ease;
-        }
-        .like-Linux:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-        .like-Linux .rank { font-size: 16px; font-weight: 600; }
-        .like-Linux .linux-name {
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
-        .like-Linux .linux-desc {
-            color: rgba(255, 255, 255, 0.65);
-            font-size: 13px;
-        }
-
-        /* 响应式 */
-        @media (max-width: 600px) {
-            .typing-effect { font-size: 28px; }
-            .nav-menu ul { gap: 8px; }
-            .nav-btn { padding: 10px 18px; font-size: 13px; }
-            .project-header { flex-direction: column; gap: 12px; align-items: flex-start; }
-            .like-Linux { flex-direction: column; gap: 4px; padding: 14px; }
-        }
-    </style>
-
     <!-- ==================== 主脚本 ==================== -->
-    <script>
-    (function() {
-        'use strict';
-
-        // ==================== 管理员配置 ====================
-        const ADMIN_USERNAME = 'sunomia';
-        const ADMIN_PASSWORD = '1209shanyu';
-
-        // ==================== 初始博客数据 ====================
-        const defaultBlogs = [
-            {
-                id: 1,
-                title: 'C++ 学习笔记（一）：基础语法入门',
-                date: '2026-06-18',
-                content: '从零开始学习 C++，整理了变量、数据类型、循环与分支结构等基础语法知识。C++ 作为一门强大的编译型语言，在算法竞赛和系统开发中有着广泛的应用，后续会继续更新面向对象编程的部分。',
-                tags: ['C++', '学习笔记']
-            },
-            {
-                id: 2,
-                title: 'Python Flask 快速搭建 RESTful API',
-                date: '2026-06-15',
-                content: '使用 Flask 框架搭建了一个简单的 RESTful API 服务，包含用户认证、数据 CRUD 操作和 JSON 响应格式。Flask 的轻量级设计使得 API 开发非常高效，配合 SQLite 即可快速原型开发。',
-                tags: ['Python', 'Flask', 'RESTful']
-            },
-            {
-                id: 3,
-                title: '用 CSS 实现毛玻璃效果',
-                date: '2026-06-10',
-                content: 'backdrop-filter 属性可以轻松实现毛玻璃（Frosted Glass）效果。搭配半透明背景和模糊滤镜，就能做出非常漂亮的现代 UI 卡片。本文分享了几个实用的 CSS 毛玻璃样式片段。',
-                tags: ['CSS', 'UI设计']
-            },
-        ];
-
-        // ==================== 全局状态 ====================
-        let blogs = [];
-        let isAdminLoggedIn = false;
-
-        // ==================== DOM 缓存 ====================
-        const $ = (sel) => document.querySelector(sel);
-        const $$ = (sel) => document.querySelectorAll(sel);
-
-        const dom = {
-            blogList:       $('#blogList'),
-            blogEmpty:      $('#blogEmpty'),
-            blogSearch:     $('#blogSearch'),
-            adminPanel:     $('#adminPanel'),
-            addBlogBtn:     $('#addBlogBtn'),
-            hiddenLogin:    $('#hiddenLogin'),
-            blogModal:      $('#blogModal'),
-            blogModalTitle: $('#blogModalTitle'),
-            blogId:         $('#blogId'),
-            blogTitle:      $('#blogTitle'),
-            blogDate:       $('#blogDate'),
-            blogContent:    $('#blogContent'),
-            blogTags:       $('#blogTags'),
-            charCount:      $('#charCount'),
-            loginModal:     $('#loginModal'),
-            loginError:     $('#loginError'),
-            username:       $('#username'),
-            password:       $('#password'),
-            bgLayer:        $('#bgLayer'),
-            typedText:      $('#typed-text'),
-            toastContainer: $('#toastContainer'),
-        };
-
-        // ==================== 初始化 ====================
-        function init() {
-            loadBlogs();
-            checkLoginStatus();
-            renderBlogs();
-            bindEvents();
-        }
-
-        // ==================== 数据存储 ====================
-        function loadBlogs() {
-            try {
-                const stored = localStorage.getItem('blogs');
-                blogs = stored ? JSON.parse(stored) : [...defaultBlogs];
-                if (!stored) saveBlogs();
-            } catch (e) {
-                console.warn('本地存储读取失败，使用默认数据');
-                blogs = [...defaultBlogs];
-            }
-        }
-
-        function saveBlogs() {
-            try {
-                localStorage.setItem('blogs', JSON.stringify(blogs));
-            } catch (e) {
-                showToast('本地存储已满，请清理旧数据', 'error');
-            }
-        }
-
-        // ==================== Toast 通知系统 ====================
-        function showToast(message, type = 'info') {
-            const item = document.createElement('div');
-            item.className = `toast-item toast-${type}`;
-            item.textContent = message;
-            dom.toastContainer.appendChild(item);
-            setTimeout(() => item.remove(), 3000);
-        }
-
-        // ==================== 登录验证 ====================
-        function checkLoginStatus() {
-            isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
-            updateAdminUI();
-        }
-
-        function updateAdminUI() {
-            const show = (el, v) => el.classList.toggle('hidden', !v);
-            show(dom.adminPanel,  isAdminLoggedIn);
-            show(dom.addBlogBtn,  isAdminLoggedIn);
-            show(dom.hiddenLogin, !isAdminLoggedIn);
-            renderBlogs();
-        }
-
-        window.adminLogin = function() {
-            const username = dom.username.value.trim();
-            const password = dom.password.value;
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                isAdminLoggedIn = true;
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                updateAdminUI();
-                closeModal('loginModal');
-                dom.username.value = '';
-                dom.password.value = '';
-                dom.loginError.textContent = '';
-                showToast('✅ 登录成功，欢迎回来！', 'success');
-            } else {
-                dom.loginError.textContent = '❌ 管理员账号或密码错误';
-                shakeElement(dom.loginModal.querySelector('.modal-content'));
-            }
-        };
-
-        window.adminLogout = function() {
-            isAdminLoggedIn = false;
-            localStorage.removeItem('isAdminLoggedIn');
-            updateAdminUI();
-            showToast('👋 已退出登录', 'info');
-        };
-
-        // ==================== 模态框操作 ====================
-        window.openModal = function(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            // 聚焦第一个输入框
-            const firstInput = modal.querySelector('input:not([type="hidden"])');
-            if (firstInput) setTimeout(() => firstInput.focus(), 150);
-        };
-
-        window.closeModal = function(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-            // 清除博客表单数据
-            if (modalId === 'blogModal') clearBlogForm();
-            if (modalId === 'loginModal') dom.loginError.textContent = '';
-        };
-
-        function clearBlogForm() {
-            dom.blogId.value = '';
-            dom.blogTitle.value = '';
-            dom.blogDate.value = '';
-            dom.blogContent.value = '';
-            dom.blogTags.value = '';
-            dom.charCount.textContent = '0 / 5000';
-            dom.charCount.className = 'char-count';
-        }
-
-        // 点击遮罩层关闭模态框
-        function handleModalBackdropClick(e) {
-            if (e.target.classList.contains('modal')) {
-                closeModal(e.target.id);
-            }
-        }
-        document.getElementById('loginModal').addEventListener('click', handleModalBackdropClick);
-        document.getElementById('blogModal').addEventListener('click', handleModalBackdropClick);
-
-        // ESC 键关闭模态框
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (!dom.blogModal.classList.contains('hidden'))  closeModal('blogModal');
-                if (!dom.loginModal.classList.contains('hidden')) closeModal('loginModal');
-            }
-        });
-
-        // ==================== 抖动动画 ====================
-        function shakeElement(el) {
-            el.style.animation = 'none';
-            void el.offsetWidth; // 触发回流
-            el.style.animation = 'shake 0.5s ease';
-            setTimeout(() => el.style.animation = '', 500);
-        }
-
-        // ==================== 博客 CRUD ====================
-        function renderBlogs() {
-            const searchTerm = dom.blogSearch ? dom.blogSearch.value.trim().toLowerCase() : '';
-            let filteredBlogs = blogs;
-            if (searchTerm) {
-                filteredBlogs = blogs.filter(b =>
-                    b.title.toLowerCase().includes(searchTerm) ||
-                    b.content.toLowerCase().includes(searchTerm) ||
-                    b.tags.some(t => t.toLowerCase().includes(searchTerm))
-                );
-            }
-
-            dom.blogList.innerHTML = '';
-            if (filteredBlogs.length === 0) {
-                dom.blogList.style.display = 'none';
-                dom.blogEmpty.classList.remove('hidden');
-                const p = dom.blogEmpty.querySelector('p');
-                p.textContent = searchTerm ? '未找到匹配的博客' : '暂无博客文章';
-                return;
-            }
-            dom.blogList.style.display = '';
-            dom.blogEmpty.classList.add('hidden');
-
-            filteredBlogs.forEach(blog => {
-                const card = document.createElement('article');
-                card.className = 'blog-card';
-                card.style.animation = 'fadeIn 0.4s ease';
-
-                const tagsHtml = blog.tags
-                    .map(tag => `<span class="blog-tag">${escapeHtml(tag)}</span>`)
-                    .join('');
-
-                const editButtons = isAdminLoggedIn
-                    ? `<div class="blog-actions">
-                            <button class="edit-btn" onclick="editBlog(${blog.id})">✏️ 编辑</button>
-                            <button class="delete-btn" onclick="deleteBlog(${blog.id})">🗑️ 删除</button>
-                        </div>`
-                    : '';
-
-                card.innerHTML = `
-                    <div class="blog-date">${escapeHtml(blog.date)}</div>
-                    <h3>${escapeHtml(blog.title)}</h3>
-                    <p>${escapeHtml(blog.content)}</p>
-                    <div class="blog-tags-row">${tagsHtml}</div>
-                    ${editButtons}
-                `;
-                dom.blogList.appendChild(card);
-            });
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        window.openAddBlog = function() {
-            dom.blogModalTitle.textContent = '发布新博客';
-            dom.blogId.value = '';
-            dom.blogTitle.value = '';
-            dom.blogDate.value = new Date().toISOString().split('T')[0];
-            dom.blogContent.value = '';
-            dom.blogTags.value = '';
-            dom.charCount.textContent = '0 / 5000';
-            dom.charCount.className = 'char-count';
-            openModal('blogModal');
-        };
-
-        window.editBlog = function(id) {
-            const blog = blogs.find(b => b.id === id);
-            if (!blog) return;
-            dom.blogModalTitle.textContent = '编辑博客';
-            dom.blogId.value = blog.id;
-            dom.blogTitle.value = blog.title;
-            dom.blogDate.value = blog.date;
-            dom.blogContent.value = blog.content;
-            dom.blogTags.value = blog.tags.join(', ');
-            updateCharCount();
-            openModal('blogModal');
-        };
-
-        window.saveBlog = function() {
-            const id      = dom.blogId.value;
-            const title   = dom.blogTitle.value.trim();
-            const date    = dom.blogDate.value;
-            const content = dom.blogContent.value.trim();
-            const tags    = dom.blogTags.value.split(/[,，]/).map(t => t.trim()).filter(Boolean);
-
-            if (!title)   { showToast('请填写博客标题', 'error'); dom.blogTitle.focus(); return; }
-            if (!date)    { showToast('请选择日期', 'error'); return; }
-            if (!content) { showToast('请填写博客内容', 'error'); dom.blogContent.focus(); return; }
-
-            if (id) {
-                const index = blogs.findIndex(b => b.id === parseInt(id));
-                if (index !== -1) {
-                    blogs[index] = { ...blogs[index], title, date, content, tags };
-                    showToast('✅ 博客已更新', 'success');
-                }
-            } else {
-                const newId = blogs.length > 0 ? Math.max(...blogs.map(b => b.id)) + 1 : 1;
-                blogs.unshift({ id: newId, title, date, content, tags });
-                showToast('✅ 博客发布成功', 'success');
-            }
-
-            saveBlogs();
-            renderBlogs();
-            closeModal('blogModal');
-        };
-
-        window.deleteBlog = function(id) {
-            if (!confirm('确定要删除这篇博客吗？此操作不可恢复。')) return;
-            blogs = blogs.filter(b => b.id !== id);
-            saveBlogs();
-            renderBlogs();
-            showToast('🗑️ 博客已删除', 'info');
-        };
-
-        // ==================== 字数统计 ====================
-        function updateCharCount() {
-            const len = dom.blogContent.value.length;
-            const max = 5000;
-            dom.charCount.textContent = `${len} / ${max}`;
-            dom.charCount.className = 'char-count';
-            if (len > max * 0.9) dom.charCount.classList.add('danger');
-            else if (len > max * 0.7) dom.charCount.classList.add('warning');
-        }
-
-        // ==================== 搜索过滤 ====================
-        function onBlogSearch() {
-            renderBlogs();
-        }
-
-        // ==================== 打字机效果 ====================
-        const typewriterText = "Hello My name is Omiaちゃん";
-        const typingSpeed  = 150;   // 打字速度 (ms)
-        const pauseDelay   = 3000;  // 打完后的停顿 (ms)
-        const deleteSpeed  = 80;    // 删除速度 (ms)
-        const restartDelay = 1500;  // 删完后重新开始的停顿 (ms)
-
-        let typeIndex    = 0;
-        let isDeleting   = false;
-        let typeTimer    = null;
-
-        function startTyping() {
-            clearTimeout(typeTimer);
-            if (!isDeleting) {
-                if (typeIndex < typewriterText.length) {
-                    dom.typedText.textContent += typewriterText[typeIndex];
-                    typeIndex++;
-                    typeTimer = setTimeout(startTyping, typingSpeed);
-                } else {
-                    isDeleting = true;
-                    typeTimer = setTimeout(startTyping, pauseDelay);
-                }
-            } else {
-                if (typeIndex > 0) {
-                    dom.typedText.textContent = typewriterText.slice(0, typeIndex - 1);
-                    typeIndex--;
-                    typeTimer = setTimeout(startTyping, deleteSpeed);
-                } else {
-                    isDeleting = false;
-                    typeTimer = setTimeout(startTyping, restartDelay);
-                }
-            }
-        }
-
-        // ==================== 随机背景图片 ====================
-        const backgroundImages = [
-            'images/columbina-5k-3840x2160-25922.jpg',
-            'images/oshi-no-ko-3840x2160-25261.jpg',
-            'images/sparxie-honkai-star-3840x2160-26290.jpg',
-            'images/zhuang-fangyi-3840x2160-26226.jpg'
-        ];
-
-        function setRandomBackground() {
-            if (backgroundImages.length === 0) return;
-            const idx = Math.floor(Math.random() * backgroundImages.length);
-            const url = backgroundImages[idx];
-            const img = new Image();
-            img.onload = function() {
-                dom.bgLayer.style.backgroundImage = `url('${url}')`;
-            };
-            img.onerror = function() {
-                console.warn('背景图片加载失败:', url);
-                // 失败时尝试下一张
-                const next = backgroundImages.filter(b => b !== url);
-                if (next.length > 0) {
-                    const fallback = next[Math.floor(Math.random() * next.length)];
-                    dom.bgLayer.style.backgroundImage = `url('${fallback}')`;
-                }
-            };
-            img.src = url;
-        }
-
-        // 预加载所有背景图片
-        function preloadBackgrounds() {
-            backgroundImages.forEach(url => {
-                const img = new Image();
-                img.src = url;
-            });
-        }
-
-        // ==================== 导航切换 ====================
-        function bindNavEvents() {
-            const navBtns = $$('.nav-btn');
-            const sections = $$('.content-section');
-
-            navBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    if (this.classList.contains('disabled')) return;
-                    navBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    const targetId = this.dataset.target;
-                    sections.forEach(s => s.classList.remove('active'));
-                    const target = document.getElementById(targetId);
-                    if (target) target.classList.add('active');
-                });
-            });
-        }
-
-        // ==================== 全局事件绑定 ====================
-        function bindEvents() {
-            // 退出登录
-            dom.adminPanel.querySelector('#logoutBtn').addEventListener('click', adminLogout);
-            // 新增博客
-            dom.addBlogBtn.addEventListener('click', openAddBlog);
-            // 博客搜索
-            dom.blogSearch.addEventListener('input', debounce(onBlogSearch, 300));
-            // 字数统计
-            dom.blogContent.addEventListener('input', updateCharCount);
-            // 导航
-            bindNavEvents();
-            // 登录表单回车提交
-            dom.loginModal.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') adminLogin();
-            });
-            // 博客表单 Ctrl+Enter 提交
-            dom.blogModal.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') saveBlog();
-            });
-        }
-
-        // ==================== 工具函数 ====================
-        function debounce(fn, delay) {
-            let timer;
-            return function(...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => fn.apply(this, args), delay);
-            };
-        }
-
-        // ==================== 页面启动 ====================
-        window.addEventListener('DOMContentLoaded', function() {
-            init();
-            startTyping();
-            setRandomBackground();
-            preloadBackgrounds();
-        });
-
-        // ==================== 暴露到全局作用域（兼容 onclick 属性） ====================
-        window.editBlog   = window.editBlog;
-        window.deleteBlog = window.deleteBlog;
-        window.saveBlog   = window.saveBlog;
-        window.openAddBlog = window.openAddBlog;
-        window.adminLogin  = window.adminLogin;
-        window.adminLogout = window.adminLogout;
-        window.openModal   = window.openModal;
-        window.closeModal  = window.closeModal;
-    })();
-    </script>
+    <script src="js/alert.js" defer></script>
 </body>
 </html>
