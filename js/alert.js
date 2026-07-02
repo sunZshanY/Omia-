@@ -2,8 +2,8 @@
     'use strict';
 
     // ==================== 管理员配置 ====================
-    const ADMIN_USERNAME = 'sunomia';
-    const ADMIN_PASSWORD = '1209shanyu';
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = '123456';
 
     // ==================== 初始博客数据 ====================
     const defaultBlogs = [
@@ -340,7 +340,7 @@
         blogs = blogs.filter(b => b.id !== id);
         saveBlogs();
         renderBlogs();
-        showToast('🗑️ 博客已删除', 'info');
+        showToast(' 博客已删除', 'info');
     };
 
     // ==================== 字数统计 ====================
@@ -360,9 +360,9 @@
 
     // ==================== 打字机效果 ====================
     const typewriterText = "Hello My name is Omiaちゃん";
-    const typingSpeed  = 150;   // 打字速度 (ms)
+    const typingSpeed  = 100;   // 打字速度 (ms)
     const pauseDelay   = 3000;  // 打完后的停顿 (ms)
-    const deleteSpeed  = 80;    // 删除速度 (ms)
+    const deleteSpeed  = 90;    // 删除速度 (ms)
     const restartDelay = 1500;  // 删完后重新开始的停顿 (ms)
 
     let typeIndex    = 0;
