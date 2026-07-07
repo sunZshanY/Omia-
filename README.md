@@ -4,8 +4,6 @@
 
 <hr>
 
-<p>
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=html,css,c,vim,neovim,javascript,node.js">
-  </a>
-</p>
+```python
+print("hello world")
+```
