@@ -248,7 +248,15 @@ body.loaded { opacity: 1; }
     font-family: var(--font-cn);
 }
 
+/*pre*/
+
+.license{
+    font-size:bold;
+    font-size:20px;
+}
 /* ---- 底部状态栏 (24px) ---- */
+
+
 .rinui-statusbar {
     display: flex; align-items: center; justify-content: space-between;
     height: 24px; min-height: 24px;

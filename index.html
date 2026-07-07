@@ -122,38 +122,17 @@
                             GitHub · sunZshanY
                         </a>
 
-                        <!-- 编程语言 -->
-                        <div class="skill-card">
-                            <h3 class="skill-heading">编程语言</h3>
-                            <div class="skill-list">
-                                <div class="skill-item">🥇 Python<span class="skill-desc">简洁优雅</span></div>
-                                <div class="skill-item">🥈 C++<span class="skill-desc">高性能</span></div>
-                                <div class="skill-item">🥉 Java<span class="skill-desc">企业级</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Linux -->
-                        <div class="skill-card">
-                            <h3 class="skill-heading">Linux 发行版</h3>
-                            <div class="linux-list">
-                                <div class="linux-item">🥇 Arch Linux<span class="linux-desc">BTW</span></div>
-                                <div class="linux-item">🥈 Ubuntu<span class="linux-desc">新手首选</span></div>
-                                <div class="linux-item">🥉 Debian<span class="linux-desc">稳定可靠</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-        </div>
-
+                        <pre class="license">
+                            <a href="https://github.com/sunZshanY/sunZshanY.github.io/blob/main/LICENSE" target="_blank" style="color:inherit;text-decoration:underline;">使用许可协议：CC BY-NC-SA 4.0</a>
+                            </pre>
         <!-- 底部状态栏 -->
         <footer class="rinui-statusbar" role="contentinfo">
-            <span>🎨 雫API</span>
-            <span class="statusbar-center">👥 浏览：<span id="visitorCount">0</span></span>
+            <span>api： 雫API</span>
+            <span class="statusbar-center"> 浏览人数：<span id="visitorCount">0</span></span>
             <span>
-                <span id="statusUser">🔒 未登录</span>
+                <span id="statusUser">🔒 暂未登录管理员权限</span>
                 <span class="statusbar-separator">|</span>
-                <span class="hidden-login" id="hiddenLogin">© sunZshanY.inc | <a href="https://github.com/sunZshanY/sunZshanY.github.io/blob/main/LICENSE" target="_blank" style="color:inherit;text-decoration:underline;">CC BY-NC-SA 4.0</a></span>
+                <span class="hidden-login" id="hiddenLogin">© sunZshanY.inc | </span>
                 <span class="statusbar-separator">|</span>
                 <span>萌ICP1145141919</span>
             </span>
@@ -183,9 +162,10 @@
                 <div class="form-field"><label for="blogDate">日期 *</label><input type="date" id="blogDate" required></div>
                 <div class="form-field"><label for="blogContent">内容</label><textarea id="blogContent" rows="6" placeholder="博客内容..." maxlength="5000"></textarea><span class="char-count" id="charCount">0/5000</span></div>
                 <div class="form-field"><label for="blogTags">标签（逗号分隔）</label><input type="text" id="blogTags" placeholder="Python, CSS, Linux..." maxlength="200"></div>
-                <div class="form-field"><label>图片（可选）</label><input type="file" id="blogImageFile" accept="image/*"><input type="text" id="blogImage" placeholder="或输入图片URL" maxlength="500"><div id="imagePreview" class="image-preview hidden"><img id="imagePreviewImg" src="" alt="预览"><button type="button" id="clearImageBtn" class="image-clear-btn">✕ 清除</button></div></div>
+                <div class="form-field"><label>图片（可选）</label>
+                    <input type="file" id="blogImageFile" accept="image/*"><input type="text" id="blogImage" placeholder="或输入图片URL" maxlength="500"><div id="imagePreview" class="image-preview hidden"><img id="imagePreviewImg" src="" alt="预览"><button type="button" id="clearImageBtn" class="image-clear-btn">❌ 清除</button></div></div>
             </div>
-            <div class="modal-footer"><button class="rinui-btn flat" onclick="closeModal('blogModal')">取消</button><button class="rinui-btn primary" onclick="saveBlog()">💾 保存</button></div>
+            <div class="modal-footer"><button class="rinui-btn flat" onclick="closeModal('blogModal')">取消</button><button class="rinui-btn primary" onclick="saveBlog()"> 保存</button></div>
         </div>
     </div>
 

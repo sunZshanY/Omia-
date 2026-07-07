@@ -11,7 +11,6 @@
     // ==================== API 配置 ====================
     const SHIZUKU_IMG_API  = 'https://api.imlazy.ink/img/';       // 横屏随机图
     const SHIZUKU_IMG_API_V = 'https://api.imlazy.ink/img-phone/'; // 竖屏随机图
-    const FLASK_API_BASE   = 'http://127.0.0.1:5000/api';
 
     // ==================== 常量 ====================
     const ADMIN_USER  = 'admin';
