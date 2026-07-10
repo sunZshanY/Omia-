@@ -199,17 +199,8 @@ function initGate(){
 function login(){
   var u = document.getElementById('gUser').value.trim();
   var p = document.getElementById('gPass').value;
-  var stored = localStorage.getItem(PASS_KEY);
-  var ok = false;
-
-  if(stored){
-    var cred = JSON.parse(stored);
-    if(u===cred.u && p===cred.p) ok=true;
-  } else {
-    // 首次：用默认密码，然后保存
-    if(u===DEF_USER && p===DEF_PASS){ ok=true; localStorage.setItem(PASS_KEY,JSON.stringify({u:u,p:p})); }
-  }
-  if(ok){
+  // 直接硬编码，最简单可靠
+  if(u==='admin' && p==='123456'){
     localStorage.setItem(BOSS_KEY,'1');
     document.getElementById('gate').style.display='none';
     document.getElementById('gUser').value='';document.getElementById('gPass').value='';
