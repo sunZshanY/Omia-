@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>内容管理 — Omiaちゃん Blog</title>
+    <link rel="icon" href="../images/images1.jpg" type="image/jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        .info-card {
+            background: rgba(22,33,62,0.75);
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 28px 32px;
+            margin-bottom: 20px;
+        }
+        .info-card h3 {
+            color: #80b0e0;
+            font-size: 16px;
+            font-family: 'Microsoft YaHei','SimHei',sans-serif;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(42,42,74,0.5);
+        }
+        .info-card p, .info-card li {
+            color: #c0c0d0;
+            font-size: 14px;
+            line-height: 2;
+            font-family: 'Microsoft YaHei','SimHei',sans-serif;
+        }
+        .info-card code {
+            background: rgba(15,15,35,0.8);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono',monospace;
+            font-size: 13px;
+            color: #ffd700;
+        }
+        .info-card pre {
+            background: rgba(15,15,35,0.8);
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono',monospace;
+            font-size: 13px;
+            color: #a0a0b8;
+            line-height: 1.8;
+            margin: 12px 0;
+        }
+        .step-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px;
+            background: #0f3460; color: #80b0e0;
+            border-radius: 50%;
+            font-weight: bold; font-size: 14px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body data-theme="admin-dark">
+
+    <div class="dash-shell">
+        <!-- 顶栏 -->
+        <header class="dash-top">
+            <span class="dash-logo">📦 Omiaちゃん — 内容管理</span>
+            <div class="dash-top-right">
+                <a href="../index.html" class="r-btn r-flat">🏠 主站</a>
+            </div>
+        </header>
+
+        <!-- 内容区 -->
+        <main class="dash-gut" style="max-width:760px;margin:0 auto;">
+
+            <div class="info-card">
+                <h3>📋 管理方式变更说明</h3>
+                <p>自 v5.0 起，博客内容改为 <strong>JSON 文件驱动</strong>，不再使用网页端登录发布。</p>
+                <p style="margin-top:8px;">所有博客数据存储在 <code>data/posts.json</code> 文件中，通过 Git 推送到 GitHub 即可更新网站内容。</p>
+            </div>
+
+            <div class="info-card">
+                <h3>🔄 更新流程</h3>
+                <p><span class="step-num">1</span> 编辑 <code>data/posts.json</code> 文件，添加/修改博客文章</p>
+                <p><span class="step-num">2</span> 本地预览确认无误</p>
+                <p><span class="step-num">3</span> 提交并推送到 GitHub：</p>
+                <pre>git add data/posts.json
+git commit -m "update: 更新博客内容"
+git push origin main</pre>
+                <p><span class="step-num">4</span> 等待 GitHub Pages 自动部署（约1-2分钟）</p>
+            </div>
+
+            <div class="info-card">
+                <h3>📝 JSON 数据格式</h3>
+                <pre>{
+  "version": "4.0",
+  "updatedAt": "2026-07-08T00:00:00Z",
+  "posts": [
+    {
+      "id": 1,
+      "title": "文章标题",
+      "date": "2026-07-08",
+      "content": "文章正文内容...",
+      "tags": ["标签1", "标签2"],
+      "image": "图片URL（可选）"
+    }
+  ]
+}</pre>
+                <p style="margin-top:8px;color:#808090;font-size:12px;">💡 <strong>提示：</strong>id 必须唯一，date 格式为 YYYY-MM-DD，tags 为字符串数组。</p>
+            </div>
+
+            <div class="info-card">
+                <h3>📊 当前数据预览</h3>
+                <p>博客文章数：<strong id="postCount">—</strong></p>
+                <p>最后更新：<strong id="lastUpdate">—</strong></p>
+                <div id="postList" style="margin-top:14px;"></div>
+            </div>
+
+        </main>
+
+        <!-- 底栏 -->
+        <footer class="dash-foot">
+            <span>Omiaちゃん Blog — v5.0 JSON驱动</span>
+            <span>萌ICP1145141919</span>
+        </footer>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+        var DATA_URL = '../data/posts.json';
+
+        function safeHTML(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        fetch(DATA_URL + '?_t=' + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('postCount').textContent = (data.posts || []).length;
+                document.getElementById('lastUpdate').textContent = data.updatedAt
+                    ? new Date(data.updatedAt).toLocaleString('zh-CN')
+                    : '未知';
+
+                var list = document.getElementById('postList');
+                if (data.posts && data.posts.length) {
+                    var html = '<table class="data-table"><thead><tr><th>ID</th><th>标题</th><th>日期</th><th>标签</th></tr></thead><tbody>';
+                    data.posts.forEach(function(p) {
+                        html += '<tr><td class="col-narrow">' + p.id + '</td>'
+                            + '<td>' + safeHTML(p.title) + '</td>'
+                            + '<td class="col-mid">' + safeHTML(p.date) + '</td>'
+                            + '<td>' + safeHTML((p.tags||[]).join(', ')) + '</td></tr>';
+                    });
+                    html += '</tbody></table>';
+                    list.innerHTML = html;
+                } else {
+                    list.innerHTML = '<p style="color:#808090;">暂无博客数据</p>';
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('postCount').textContent = '加载失败';
+                console.error(err);
+            });
+    })();
+    </script>
+
+</body>
+</html>

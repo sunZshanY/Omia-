@@ -1,467 +1,407 @@
 /**
- * Omiaちゃん Blog — v3.0 雫API 动态版
- * =====================================
- * 背景图片: 雫API (api.imlazy.ink) 随机ACG壁纸
- * 数据存储: localStorage + Flask API 渐进增强
- * 域名: omia.xyz
+ * Omiaちゃん Blog — 主脚本 v5.0
+ * ==============================
+ * 背景：雫API (api.imlazy.ink)
+ * 数据：data/posts.json（GitHub 托管，每日更新）
+ * 留言 & 访客：localStorage 本地存储
  */
 (function() {
     'use strict';
 
-    // ==================== API 配置 ====================
-    const SHIZUKU_IMG_API  = 'https://api.imlazy.ink/img/';       // 横屏随机图
-    const SHIZUKU_IMG_API_V = 'https://api.imlazy.ink/img-phone/'; // 竖屏随机图
+    // ========== 常量 ==========
+    var IMG_API_WIDE = 'https://api.imlazy.ink/img/';
+    var DATA_URL = 'data/posts.json';
+    var BG_TICK = 60000;
 
-    // ==================== 常量 ====================
-    const ADMIN_USER  = 'admin';
-    const ADMIN_PASS  = '123456';
-    const API_TIMEOUT = 5000;
-    const API_RETRIES = 3;
-    const BG_REFRESH  = 60000; // 背景自动切换间隔 (ms)
+    var TYPE_LINE = 'Hello My name is Omiaちゃん';
+    var TYPE_TICK = 100, TYPE_REST = 3000, TYPE_DEL = 90, TYPE_GAP = 1500;
 
-    const DEFAULT_BLOGS = [
-        {
-            id: 1,
-            title: 'Hello World',
-            date: '2026-07-02',
-            content: 'Hello World！这是 Omiaちゃん 的第一篇测试博客文章。欢迎来到我的小博客，这里将记录我的编程学习、项目开发以及日常生活的点点滴滴～',
-            tags: ['测试', '博客', 'HelloWorld']
-        },
-        {
-            id: 2,
-            title: 'C++你崛起吧',
-            date: '2026-07-06',
-            image: 'images/1.jpg',
-            tags: ['C++', 'GCC', 'GNU/Linux']
-        }
-    ];
+    // ========== 全局态 ==========
+    var g_postHeap = [];
+    var g_noteHeap = [];
+    var bgLooper = null;
 
-    const TYPE_TEXT  = 'Hello My name is Omiaちゃん';
-    const TYPE_SPEED = 100, TYPE_PAUSE = 3000, TYPE_DEL = 90, TYPE_RESTART = 1500;
+    // ========== DOM 缓取 ==========
+    function $(s) { return document.querySelector(s); }
+    function $$(s) { return document.querySelectorAll(s); }
 
-    // ==================== 全局状态 ====================
-    let blogs          = [];
-    let isAdmin        = false;
-    let apiOnline      = false;
-    let apiToken       = '';
-    let pendingImage   = null;
-    let detailBlogId   = null;
-    let bgTimer        = null;
-
-    // ==================== DOM 缓存 ====================
-    const $  = s => document.querySelector(s);
-    const $$ = s => document.querySelectorAll(s);
-
-    const D = {
-        bgLayer:          $('#bgLayer'),
-        typedText:        $('#typed-text'),
-        toast:            $('#toastContainer'),
-        // 顶部栏
-        apiDot:           $('#apiStatusDot'),
-        apiLabel:         $('#apiStatusText'),
-        adminBadge:       $('#adminBadge'),
-        logoutBtn:        $('#logoutBtn'),
-        loginBtn:         $('#loginBtn'),
-        // 侧边栏
-        sidebarNewBlog:   $('#sidebarNewBlog'),
+    var E = {
+        // 背景
+        bgLayer:        $('#bgLayer'),
+        // Toast
+        toast:          $('#toastContainer'),
+        // 顶栏
+        typeWriter:     $('#typed-text'),
+        apiDot:         $('#apiStatusDot'),
+        apiLabel:       $('#apiStatusText'),
         // 博客
-        blogList:         $('#blogList'),
-        blogEmpty:        $('#blogEmpty'),
-        blogSearch:       $('#blogSearch'),
-        addBlogBtn:       $('#addBlogBtn'),
+        blogList:       $('#blogList'),
+        blogEmpty:      $('#blogEmpty'),
+        blogSearch:     $('#blogSearch'),
+        // 留言板（动态注入到HTML）
+        gbAuthor:       null,
+        gbContact:      null,
+        gbBody:         null,
+        gbTally:        null,
+        btnPostNote:    null,
+        noteWall:       null,
+        noteVoid:       null,
         // 状态栏
-        visitorCount:     $('#visitorCount'),
-        statusUser:       $('#statusUser'),
-        hiddenLogin:      $('#hiddenLogin'),
-        // 登录
-        loginModal:       $('#loginModal'),
-        loginError:       $('#loginError'),
-        username:         $('#username'),
-        password:         $('#password'),
-        // 博客编辑
-        blogModal:        $('#blogModal'),
-        blogModalTitle:   $('#blogModalTitle'),
-        blogId:           $('#blogId'),
-        blogTitle:        $('#blogTitle'),
-        blogDate:         $('#blogDate'),
-        blogContent:      $('#blogContent'),
-        blogTags:         $('#blogTags'),
-        charCount:        $('#charCount'),
-        blogImage:        $('#blogImage'),
-        blogImageFile:    $('#blogImageFile'),
-        imgPreview:       $('#imagePreview'),
-        imgPreviewImg:    $('#imagePreviewImg'),
-        clearImgBtn:      $('#clearImageBtn'),
-        // 详情
-        detailModal:      $('#blogDetailModal'),
-        detailTitle:      $('#detailTitle'),
-        detailMeta:       $('#detailMeta'),
-        detailImgWrap:    $('#detailImageWrapper'),
-        detailContent:    $('#detailContent'),
-        detailTags:       $('#detailTags'),
-        detailShareBtn:   $('#detailShareBtn'),
+        visitorCount:   $('#visitorCount')
     };
 
-    // ==================== 雫API — 随机背景图 ====================
-    /**
-     * 从雫API获取随机ACG壁纸URL。
-     * API返回302重定向到CDN图片地址，通过 Image 预加载捕获最终URL。
-     */
-    function fetchShizukuBg() {
-        return new Promise(function(resolve) {
-            var img = new Image();
-            var timeout = setTimeout(function() {
-                img.src = '';
-                resolve(null);
-            }, 8000);
+    // ========== 工具 ==========
+    function _safeHTML(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function _safeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-            img.onload = function() {
-                clearTimeout(timeout);
-                resolve(img.currentSrc || img.src);
-            };
-            img.onerror = function() {
-                clearTimeout(timeout);
-                resolve(null);
-            };
-            // 加时间戳防止缓存
-            img.src = SHIZUKU_IMG_API + '?_t=' + Date.now();
-        });
+    function _debounce(fn, ms) {
+        var t;
+        return function() { var c=this, a=arguments; clearTimeout(t); t=setTimeout(function(){fn.apply(c,a);}, ms); };
     }
 
-    /** 设置背景，失败则用本地备用图 */
-    async function setShizukuBackground() {
-        if (!D.bgLayer) return;
-        var url = await fetchShizukuBg();
-        if (url && !url.includes('data:')) {
-            D.bgLayer.style.backgroundImage = "url('" + url + "')";
-            D.bgLayer.style.opacity = '1';
-        } else if (!D.bgLayer.style.backgroundImage || D.bgLayer.style.backgroundImage === 'none') {
-            // 本地备用
-            D.bgLayer.style.backgroundImage = "url('images/columbina-5k-3840x2160-25922.jpg')";
-            D.bgLayer.style.opacity = '1';
-        }
+    function _shake(el) {
+        if (!el) return;
+        el.style.animation = 'none'; void el.offsetWidth;
+        el.style.animation = 'shake 0.5s ease';
+        setTimeout(function(){ el.style.animation = ''; }, 500);
     }
 
-    /** 启动背景自动切换 */
-    function startBgAutoRefresh() {
-        stopBgAutoRefresh();
-        setShizukuBackground();
-        bgTimer = setInterval(setShizukuBackground, BG_REFRESH);
-    }
-
-    function stopBgAutoRefresh() {
-        if (bgTimer) { clearInterval(bgTimer); bgTimer = null; }
-    }
-
-    // ==================== Flask API 客户端 ====================
-    const FlaskApi = {
-        async request(method, path, body) {
-            var ctrl = new AbortController();
-            var t = setTimeout(function() { ctrl.abort(); }, API_TIMEOUT);
-            try {
-                var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-                if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
-                var opts = { method: method, headers: headers, signal: ctrl.signal };
-                if (body && method !== 'GET') opts.body = JSON.stringify(body);
-                var res = await fetch(FLASK_API_BASE + path, opts);
-                clearTimeout(t);
-                var data = await res.json();
-                return { status: res.status, ok: res.ok, data: data };
-            } catch (e) {
-                clearTimeout(t);
-                return { status: 0, ok: false, data: { error: e.name === 'AbortError' ? 'Timeout' : 'NetworkError' } };
-            }
-        },
-        async health() {
-            var r = await this.request('GET', '/health');
-            return r.ok && r.data.status === 'ok';
-        },
-        async login(u, p) {
-            var r = await this.request('POST', '/auth/login', { username: u, password: p });
-            if (r.ok && r.data.token) { apiToken = r.data.token; apiOnline = true; updateApiStatus(); return true; }
-            return false;
-        },
-        async checkAuth() {
-            if (!apiToken) return false;
-            var r = await this.request('GET', '/auth/status');
-            return r.ok && r.data.authenticated;
-        },
-        async logout() { await this.request('POST', '/auth/logout'); apiToken = ''; },
-        async getBlogs(s) {
-            var p = '/blogs'; if (s) p += '?search=' + encodeURIComponent(s);
-            var r = await this.request('GET', p);
-            if (r.ok) return r.data.blogs || [];
-            throw new Error(r.data.message || '获取失败');
-        },
-        async createBlog(d) {
-            var r = await this.request('POST', '/blogs', d);
-            if (r.ok) return r.data.blog;
-            throw new Error(r.data.message || '创建失败');
-        },
-        async updateBlog(id, d) {
-            var r = await this.request('PUT', '/blogs/' + id, d);
-            if (r.ok) return r.data.blog;
-            throw new Error(r.data.message || '更新失败');
-        },
-        async deleteBlog(id) {
-            var r = await this.request('DELETE', '/blogs/' + id);
-            if (r.ok) return true;
-            throw new Error(r.data.message || '删除失败');
-        }
-    };
-
-    async function tryConnectFlask() {
-        for (var i = 0; i < API_RETRIES; i++) {
-            try { if (await FlaskApi.health()) { apiOnline = true; console.log('[Flask] 已连接'); updateApiStatus(); return true; } }
-            catch (e) { /* retry */ }
-            if (i < API_RETRIES - 1) await sleep(500);
-        }
-        console.log('[Flask] 未连接，离线模式');
-        updateApiStatus();
-        return false;
-    }
-
-    function updateApiStatus() {
-        if (!D.apiDot || !D.apiLabel) return;
-        D.apiDot.classList.toggle('connected', apiOnline);
-        D.apiLabel.classList.toggle('connected', apiOnline);
-        D.apiLabel.textContent = apiOnline ? '已连接' : '离线模式';
-    }
-
-    function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
-
-    // ==================== Toast ====================
-    function toast(msg, type) {
+    // ========== Toast ==========
+    function _pop(msg, type) {
         type = type || 'info';
         var icons = { success: '✅', error: '❌', info: 'ℹ️' };
         var el = document.createElement('div');
         el.className = 'toast-item toast-' + type;
-        el.textContent = (icons[type] || '') + ' ' + msg;
-        D.toast.appendChild(el);
+        el.textContent = (icons[type]||'') + ' ' + msg;
+        E.toast.appendChild(el);
         setTimeout(function() {
             el.style.animation = 'toastOut 0.35s ease forwards';
-            setTimeout(function() { el.remove(); }, 350);
+            setTimeout(function(){ el.remove(); }, 350);
         }, 2800);
     }
 
-    // ==================== 数据持久化 ====================
-    function loadBlogs() {
-        try { var s = localStorage.getItem('blogs'); blogs = s ? JSON.parse(s) : DEFAULT_BLOGS.slice(); if (!s) saveLocal(); }
-        catch (e) { blogs = DEFAULT_BLOGS.slice(); }
-    }
-    function saveLocal() {
-        try { localStorage.setItem('blogs', JSON.stringify(blogs)); }
-        catch (e) { toast('存储空间不足', 'error'); }
-    }
-    async function syncFromFlask() {
-        if (!apiOnline) return;
-        try { var b = await FlaskApi.getBlogs(); if (b.length) { blogs = b; saveLocal(); renderBlogs(); } }
-        catch (e) { console.warn('[Flask] 同步失败: ' + e.message); }
+    // ========== 背景 (雫API) ==========
+    function _fetchBg() {
+        return new Promise(function(ok) {
+            var img = new Image();
+            var bomb = setTimeout(function(){ img.src=''; ok(null); }, 8000);
+            img.onload = function() { clearTimeout(bomb); ok(img.currentSrc||img.src); };
+            img.onerror = function() { clearTimeout(bomb); ok(null); };
+            img.src = IMG_API_WIDE + '?_t=' + Date.now();
+        });
     }
 
-    // ==================== 登录 ====================
-    function checkLogin() { isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true'; updateAdminUI(); }
-    function updateAdminUI() {
-        var show = function(el, v) { if (el) el.classList.toggle('hidden', !v); };
-        show(D.adminBadge, isAdmin); show(D.logoutBtn, isAdmin);
-        show(D.loginBtn, !isAdmin); show(D.addBlogBtn, isAdmin);
-        show(D.sidebarNewBlog, isAdmin); show(D.hiddenLogin, !isAdmin);
-        $$('.admin-only').forEach(function(b) { b.classList.toggle('hidden', !isAdmin); });
-        if (D.statusUser) { D.statusUser.textContent = isAdmin ? '👤 管理员' : '🔒 未登录'; D.statusUser.classList.toggle('logged-in', isAdmin); }
-        renderBlogs();
+    async function _paintBg() {
+        if (!E.bgLayer) return;
+        var src = await _fetchBg();
+        if (src && !~src.indexOf('data:')) {
+            E.bgLayer.style.backgroundImage = "url('"+src+"')";
+            E.bgLayer.style.opacity = '1';
+        } else if (!E.bgLayer.style.backgroundImage || E.bgLayer.style.backgroundImage === 'none') {
+            var fb = ['images/columbina-5k-3840x2160-25922.jpg','images/oshi-no-ko-3840x2160-25261.jpg','images/sparxie-honkai-star-3840x2160-26290.jpg','images/zhuang-fangyi-3840x2160-26226.jpg'];
+            E.bgLayer.style.backgroundImage = "url('"+fb[Math.floor(Math.random()*fb.length)]+"')";
+            E.bgLayer.style.opacity = '1';
+        }
     }
 
-    window.adminLogin = async function() {
-        var u = D.username.value.trim(), p = D.password.value;
-        var ok = (u === ADMIN_USER && p === ADMIN_PASS);
-        var apiOk = false;
-        if (apiOnline) { apiOk = await FlaskApi.login(u, p); if (apiOk) { localStorage.setItem('apiAuthToken', apiToken); await syncFromFlask(); } }
-        if (ok || apiOk) { isAdmin = true; localStorage.setItem('isAdminLoggedIn', 'true'); updateAdminUI(); closeModal('loginModal'); D.username.value = ''; D.password.value = ''; D.loginError.textContent = ''; toast('登录成功 ' + (apiOk ? '(API)' : '(离线)'), 'success'); }
-        else { D.loginError.textContent = '❌ 账号或密码错误'; shake(D.loginModal.querySelector('.modal-content')); }
+    function _startBgLoop() {
+        if (bgLooper) clearInterval(bgLooper);
+        _paintBg();
+        bgLooper = setInterval(_paintBg, BG_TICK);
+    }
+
+    // ========== 数据层 ==========
+    // 博客数据：从 data/posts.json 加载（GitHub 托管）
+    var BOX_KEY = 'omiblog_z';       // 保留作为缓存
+    var NOTE_KEY = 'omi_comments';
+    var EYE_KEY = 'kaze_count';
+    var EYE_FLAG = 'kaze_flag';
+
+    function _loadPosts() {
+        // 优先从 JSON 文件加载（GitHub 托管的最新数据）
+        return fetch(DATA_URL + '?_t=' + Date.now())
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                if (data && Array.isArray(data.posts)) {
+                    g_postHeap = data.posts;
+                    // 同步到 localStorage 作为缓存（供 read.html 使用）
+                    try { localStorage.setItem(BOX_KEY, JSON.stringify(g_postHeap)); } catch(e) {}
+                } else {
+                    throw new Error('Invalid format');
+                }
+            })
+            .catch(function(err) {
+                console.warn('⚠️ 无法加载 data/posts.json，使用 localStorage 缓存:', err.message);
+                // 降级：从 localStorage 读取缓存
+                try {
+                    var r = localStorage.getItem(BOX_KEY);
+                    g_postHeap = r ? JSON.parse(r) : [];
+                } catch(e) {
+                    g_postHeap = [];
+                }
+            });
+    }
+
+    function _loadNotes() {
+        try { var r=localStorage.getItem(NOTE_KEY); g_noteHeap=r?JSON.parse(r):[]; }
+        catch(e){ g_noteHeap=[]; }
+    }
+    function _dumpNotes() { try{localStorage.setItem(NOTE_KEY,JSON.stringify(g_noteHeap));}catch(e){_pop('存储不足','error');} }
+
+    // ========== 访客计数 ==========
+    function _eyeBump() {
+        var c = parseInt(localStorage.getItem(EYE_KEY),10)||0;
+        if (!sessionStorage.getItem(EYE_FLAG)) { c++; localStorage.setItem(EYE_KEY,'' + c); sessionStorage.setItem(EYE_FLAG,'1'); }
+        _eyeShow(c);
+    }
+    function _eyeShow(v) {
+        if (E.visitorCount) { var n = typeof v==='number'?v:(parseInt(localStorage.getItem(EYE_KEY),10)||0); E.visitorCount.textContent = n; }
+    }
+    window._resetEye = function() { localStorage.setItem(EYE_KEY,'0'); _eyeShow(0); _pop('计数已归零','success'); };
+
+    // ========== 弹窗 ==========
+    window.openModal = function(id) {
+        var m=document.getElementById(id); if(!m)return;
+        m.classList.remove('hidden'); document.body.style.overflow='hidden';
+        var inp=m.querySelector('input:not([type="hidden"])'); if(inp)setTimeout(function(){inp.focus();},150);
     };
-    window.adminLogout = async function() {
-        isAdmin = false; localStorage.removeItem('isAdminLoggedIn');
-        if (apiOnline && apiToken) { await FlaskApi.logout(); apiToken = ''; localStorage.removeItem('apiAuthToken'); }
-        updateAdminUI(); toast('已退出登录', 'info');
-    };
-
-    // ==================== 模态框 ====================
-    window.openModal  = function(id) { var m = document.getElementById(id); if (!m) return; m.classList.remove('hidden'); document.body.style.overflow = 'hidden'; var inp = m.querySelector('input:not([type="hidden"])'); if (inp) setTimeout(function() { inp.focus(); }, 150); };
     window.closeModal = function(id) {
-        var m = document.getElementById(id); if (!m) return;
-        m.classList.add('hidden'); document.body.style.overflow = '';
-        if (id === 'blogModal') resetForm();
-        if (id === 'loginModal') D.loginError.textContent = '';
-        if (id === 'blogDetailModal') { D.detailTitle.textContent = ''; D.detailContent.innerHTML = ''; D.detailTags.innerHTML = ''; D.detailImgWrap.innerHTML = ''; D.detailImgWrap.classList.add('hidden'); detailBlogId = null; }
+        var m=document.getElementById(id); if(!m)return;
+        m.classList.add('hidden'); document.body.style.overflow='';
+        if(id==='blogDetailModal'){ E.detailTitle.textContent='';E.detailContent.innerHTML='';E.detailTags.innerHTML='';E.detailImgWrap.innerHTML='';E.detailImgWrap.classList.add('hidden');watchingId=null; }
     };
-    function modalBackdrop(e) { if (e.target.classList.contains('modal')) closeModal(e.target.id); }
-    function resetForm() { D.blogId.value = ''; D.blogTitle.value = ''; D.blogDate.value = ''; D.blogContent.value = ''; D.blogTags.value = ''; D.charCount.textContent = '0 / 5000'; D.charCount.className = 'char-count'; clearImages(); }
 
-    // ==================== 侧边栏导航 ====================
-    function bindNav() {
-        var btns = $$('.sidebar-btn[data-panel]'), panels = $$('.content-panel');
-        btns.forEach(function(b) {
-            b.addEventListener('click', function() {
-                if (this.classList.contains('disabled') || this.disabled) return;
-                btns.forEach(function(x) { x.classList.remove('active'); });
-                this.classList.add('active');
-                var tid = this.dataset.panel;
-                panels.forEach(function(p) { p.classList.remove('active'); });
-                var tgt = document.getElementById(tid);
-                if (tgt) { tgt.classList.add('active'); tgt.style.animation = 'none'; void tgt.offsetWidth; tgt.style.animation = 'panelIn 0.35s ease forwards'; }
+    function _backdropClick(e) { if(e.target.classList.contains('modal'))window.closeModal(e.target.id); }
+
+    // ========== 导航 ==========
+    function _wireNav() {
+        var btns=$$('.sidebar-btn[data-panel]'), panes=$$('.content-panel');
+        btns.forEach(function(b){
+            b.addEventListener('click',function(){
+                if(this.classList.contains('disabled')||this.disabled)return;
+                btns.forEach(function(x){x.classList.remove('active');}); this.classList.add('active');
+                var tid=this.dataset.panel;
+                panes.forEach(function(p){p.classList.remove('active');});
+                var t=document.getElementById(tid);
+                if(t){t.classList.add('active');t.style.animation='none';void t.offsetWidth;t.style.animation='';}
+                if(tid==='guestbook')_paintNotes();
             });
         });
-        if (D.sidebarNewBlog) D.sidebarNewBlog.addEventListener('click', openAddBlog);
     }
 
-    // ==================== 博客 CRUD ====================
-    function renderBlogs() {
-        var s = D.blogSearch ? D.blogSearch.value.trim().toLowerCase() : '';
-        var f = blogs;
-        if (s) f = blogs.filter(function(b) { return b.title.toLowerCase().includes(s) || b.content.toLowerCase().includes(s) || b.tags.some(function(t) { return t.toLowerCase().includes(s); }); });
-        D.blogList.innerHTML = '';
-        if (!f.length) { D.blogList.style.display = 'none'; D.blogEmpty.classList.remove('hidden'); D.blogEmpty.querySelector('.empty-subtitle').textContent = s ? '未找到匹配的博客' : '登录后点击「新建博客」开始创作吧'; return; }
-        D.blogList.style.display = ''; D.blogEmpty.classList.add('hidden');
+    // ========== 博客渲染 ==========
+    function _paintPosts() {
+        var s = E.blogSearch ? E.blogSearch.value.trim().toLowerCase() : '';
+        var f = g_postHeap;
+        if (s) f = g_postHeap.filter(function(b){return ~b.title.toLowerCase().indexOf(s)||~b.content.toLowerCase().indexOf(s)||b.tags.some(function(t){return ~t.toLowerCase().indexOf(s);});});
 
-        f.forEach(function(b) {
-            var card = document.createElement('article'); card.className = 'blog-card'; card.dataset.blogId = b.id;
-            var tagsH = b.tags.map(function(t) { return '<span class="blog-tag">' + escHtml(t) + '</span>'; }).join('');
-            var actH = isAdmin ? '<div class="blog-actions"><button class="rinui-btn primary" onclick="event.stopPropagation();editBlog(' + b.id + ')">✏️ 编辑</button><button class="rinui-btn danger" onclick="event.stopPropagation();deleteBlog(' + b.id + ')">🗑️ 删除</button></div>' : '';
-            var imgH = (b.image || b.images) ? '<div class="blog-image-wrapper"><img src="' + escAttr(b.image || b.images) + '" alt="' + escAttr(b.title) + '" class="blog-image" loading="lazy" onclick="event.stopPropagation();openLightbox(\'' + escAttr(b.image || b.images) + '\')" onerror="this.parentElement.style.display=\'none\'"></div>' : '';
-            card.innerHTML = '<div class="blog-date">' + escHtml(b.date) + '</div><h3 class="blog-card-title">' + escHtml(b.title) + '</h3>' + imgH + '<p>' + escHtml(b.content) + '</p><div class="blog-tags-row">' + tagsH + '</div><span class="read-more">阅读全文 →</span>' + actH;
-            D.blogList.appendChild(card);
+        E.blogList.innerHTML = '';
+        if (!f.length) { E.blogList.style.display='none'; E.blogEmpty.classList.remove('hidden'); E.blogEmpty.querySelector('.empty-subtitle').textContent=s?'没有匹配的结果…':'敬请期待新文章~'; return; }
+        E.blogList.style.display=''; E.blogEmpty.classList.add('hidden');
+
+        f.forEach(function(b){
+            var card=document.createElement('article'); card.className='blog-card'; card.dataset.blogId=b.id;
+            var tagsH=b.tags.map(function(t){return'<span class="blog-tag">'+_safeHTML(t)+'</span>';}).join('');
+            var picH=(b.image||b.images)?'<div class="blog-image-wrapper"><img src="'+_safeAttr(b.image||b.images)+'" alt="'+_safeAttr(b.title)+'" class="blog-image" loading="lazy" onclick="event.stopPropagation();openLightbox(\''+_safeAttr(b.image||b.images)+'\')" onerror="this.parentElement.style.display=\'none\'"></div>':'';
+            card.innerHTML='<div class="blog-date">'+_safeHTML(b.date)+'</div><h3 class="blog-card-title" title="点击查看完整文章">'+_safeHTML(b.title)+'</h3>'+picH+'<div class="blog-body"><p>'+_safeHTML(b.content)+'</p></div><div class="blog-tags-row">'+tagsH+'</div><span class="read-more" data-action="expand">展开阅读 ↓</span>';
+            E.blogList.appendChild(card);
         });
     }
 
-    function cardClick(e) {
-        var c = e.target.closest('.blog-card'); if (!c) return;
-        if (e.target.closest('button') || e.target.closest('.blog-image')) return;
-        var id = parseInt(c.dataset.blogId, 10); if (id) openDetail(id);
-    }
-
-    window.openAddBlog = function() { D.blogModalTitle.textContent = '✏️ 发布新博客'; resetForm(); D.blogDate.value = new Date().toISOString().split('T')[0]; openModal('blogModal'); };
-    window.editBlog    = function(id) {
-        var b = blogs.find(function(x) { return x.id === id; }); if (!b) return;
-        D.blogModalTitle.textContent = '✏️ 编辑博客'; D.blogId.value = b.id; D.blogTitle.value = b.title; D.blogDate.value = b.date; D.blogContent.value = b.content; D.blogTags.value = b.tags.join(', ');
-        populateImages(b.image || ''); updateCharCount(); openModal('blogModal');
-    };
-    window.saveBlog    = async function() {
-        var id = D.blogId.value, title = D.blogTitle.value.trim(), date = D.blogDate.value, content = D.blogContent.value.trim();
-        var tags = D.blogTags.value.split(/[,，]/).map(function(t) { return t.trim(); }).filter(Boolean);
-        var img = getImageData();
-        if (!title) { toast('请填写标题', 'error'); D.blogTitle.focus(); return; }
-        if (!date)  { toast('请选择日期', 'error'); return; }
-        if (!content) { toast('请填写内容', 'error'); D.blogContent.focus(); return; }
-        var payload = { title: title, date: date, content: content, tags: tags, image: img };
-
-        if (apiOnline && apiToken) {
-            try { if (id) { await FlaskApi.updateBlog(parseInt(id), payload); } else { await FlaskApi.createBlog(payload); } toast(id ? '已更新 (API)' : '发布成功 (API)', 'success'); await syncFromFlask(); }
-            catch (e) { toast('API失败: ' + e.message, 'error'); saveLocalBlog(id, title, date, content, tags, img); }
-        } else { saveLocalBlog(id, title, date, content, tags, img); }
-        renderBlogs(); closeModal('blogModal');
-    };
-    function saveLocalBlog(id, title, date, content, tags, img) {
-        if (id) { var i = blogs.findIndex(function(b) { return b.id === parseInt(id); }); if (i !== -1) { blogs[i] = Object.assign({}, blogs[i], { title: title, date: date, content: content, tags: tags, image: img }); toast('已更新 (离线)', 'success'); } }
-        else { var nid = blogs.length ? Math.max.apply(null, blogs.map(function(b) { return b.id; })) + 1 : 1; blogs.unshift({ id: nid, title: title, date: date, content: content, tags: tags, image: img }); toast('发布成功 (离线)', 'success'); }
-        saveLocal();
-    }
-    window.deleteBlog = async function(id) {
-        if (!confirm('确定删除？不可恢复。')) return;
-        if (apiOnline && apiToken) { try { await FlaskApi.deleteBlog(id); toast('已删除 (API)', 'info'); await syncFromFlask(); } catch (e) { toast('API失败: ' + e.message, 'error'); blogs = blogs.filter(function(b) { return b.id !== id; }); saveLocal(); } }
-        else { blogs = blogs.filter(function(b) { return b.id !== id; }); saveLocal(); toast('已删除', 'info'); }
-        renderBlogs();
-    };
-
-    // ==================== 博客详情 ====================
-    function openDetail(id) {
-        var b = blogs.find(function(x) { return x.id === id; }); if (!b) return;
-        if (detailBlogId === id && D.detailModal && !D.detailModal.classList.contains('hidden')) return;
-        detailBlogId = id;
-        D.detailTitle.textContent = b.title;
-        D.detailMeta.innerHTML = '📅 ' + escHtml(b.date) + ' | ✍️ Omiaちゃん';
-        var img = b.image || b.images || '';
-        if (img) { D.detailImgWrap.classList.remove('hidden'); D.detailImgWrap.innerHTML = '<img src="' + escAttr(img) + '" alt="' + escAttr(b.title) + '" onclick="openLightbox(\'' + escAttr(img) + '\')">'; }
-        else { D.detailImgWrap.classList.add('hidden'); D.detailImgWrap.innerHTML = ''; }
-        D.detailContent.innerHTML = b.content.split('\n').filter(function(p) { return p.trim(); }).map(function(p) { return '<p>' + escHtml(p.trim()) + '</p>'; }).join('');
-        D.detailTags.innerHTML = b.tags.map(function(t) { return '<span class="blog-tag">' + escHtml(t) + '</span>'; }).join('');
-        openModal('blogDetailModal');
-    }
-
-    // ==================== 图片处理 ====================
-    function clearImages() { pendingImage = null; if (D.blogImage) D.blogImage.value = ''; if (D.blogImageFile) D.blogImageFile.value = ''; if (D.imgPreview) D.imgPreview.classList.add('hidden'); if (D.imgPreviewImg) D.imgPreviewImg.src = ''; }
-    function getImageData() { return pendingImage || (D.blogImage ? D.blogImage.value.trim() : ''); }
-    function populateImages(d) { clearImages(); if (!d) return; if (d.startsWith('data:image/')) { pendingImage = d; showPreview(d); } else { if (D.blogImage) D.blogImage.value = d; pendingImage = d; showPreview(d); } }
-    function showPreview(src) { if (!D.imgPreview || !D.imgPreviewImg) return; D.imgPreview.classList.remove('hidden'); D.imgPreviewImg.src = src; }
-    function handleFileSelect() {
-        var f = D.blogImageFile.files[0]; if (!f) return;
-        if (!f.type.startsWith('image/')) { toast('请选择图片文件', 'error'); D.blogImageFile.value = ''; return; }
-        if (f.size > 2*1024*1024) { toast('图片不能超过2MB', 'error'); D.blogImageFile.value = ''; return; }
-        var r = new FileReader(); r.onload = function(e) { pendingImage = e.target.result; showPreview(pendingImage); if (D.blogImage) D.blogImage.value = ''; };
-        r.onerror = function() { toast('读取失败', 'error'); }; r.readAsDataURL(f);
-    }
-    function handleUrlInput() { var u = D.blogImage.value.trim(); if (u) { pendingImage = u; showPreview(u); if (D.blogImageFile) D.blogImageFile.value = ''; } else { pendingImage = null; if (D.imgPreview) D.imgPreview.classList.add('hidden'); } }
-    window.openLightbox = function(src) { var ex = document.querySelector('.lightbox-overlay'); if (ex) ex.remove(); var o = document.createElement('div'); o.className = 'lightbox-overlay'; o.innerHTML = '<img src="' + escAttr(src) + '" alt="放大查看">'; o.addEventListener('click', function() { o.remove(); }); document.body.appendChild(o); };
-
-    // ==================== 字数统计 ====================
-    function updateCharCount() { if (!D.charCount) return; var l = D.blogContent.value.length, m = 5000; D.charCount.textContent = l + ' / ' + m; D.charCount.className = 'char-count' + (l > m*0.9 ? ' danger' : '') + (l > m*0.7 && l <= m*0.9 ? ' warning' : ''); }
-
-    // ==================== 访客计数 ====================
-    function visitorCount() { var k = 'site_visitor_v3', sk = 'site_visit_v3', t = parseInt(localStorage.getItem(k),10)||0; if (!sessionStorage.getItem(sk)) { t++; localStorage.setItem(k, String(t)); sessionStorage.setItem(sk, '1'); } if (D.visitorCount) D.visitorCount.textContent = t; }
-
-    // ==================== 打字机 ====================
-    var ti = 0, td = false, tt = null;
-    function typing() { clearTimeout(tt); if (!D.typedText) return; if (!td) { if (ti < TYPE_TEXT.length) { D.typedText.textContent += TYPE_TEXT[ti]; ti++; tt = setTimeout(typing, TYPE_SPEED); } else { td = true; tt = setTimeout(typing, TYPE_PAUSE); } } else { if (ti > 0) { D.typedText.textContent = TYPE_TEXT.slice(0, ti-1); ti--; tt = setTimeout(typing, TYPE_DEL); } else { td = false; tt = setTimeout(typing, TYPE_RESTART); } } }
-
-    // ==================== 工具 ====================
-    function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function escAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function debounce(f, d) { var t; return function() { var c=this, a=arguments; clearTimeout(t); t = setTimeout(function() { f.apply(c,a); }, d); }; }
-    function shake(el) { if (!el) return; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'shake 0.5s ease'; setTimeout(function() { el.style.animation = ''; }, 500); }
-
-    // ==================== 事件绑定 ====================
-    function bindEvents() {
-        bindNav();
-        D.loginBtn.addEventListener('click', function() { openModal('loginModal'); });
-        D.logoutBtn.addEventListener('click', adminLogout);
-        D.hiddenLogin.addEventListener('click', function() { openModal('loginModal'); });
-        D.addBlogBtn.addEventListener('click', openAddBlog);
-        D.blogSearch.addEventListener('input', debounce(renderBlogs, 300));
-        D.blogContent.addEventListener('input', updateCharCount);
-        D.blogImageFile.addEventListener('change', handleFileSelect);
-        D.blogImage.addEventListener('input', debounce(handleUrlInput, 500));
-        D.clearImgBtn.addEventListener('click', clearImages);
-        D.blogList.addEventListener('click', cardClick);
-        D.detailShareBtn.addEventListener('click', function() { if (!detailBlogId) return; var u = location.origin + location.pathname + '?blog=' + detailBlogId; navigator.clipboard.writeText(u).then(function() { toast('链接已复制', 'success'); }).catch(function() { toast('复制失败', 'error'); }); });
-        $$('.modal').forEach(function(m) { m.addEventListener('click', modalBackdrop); });
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (D.detailModal && !D.detailModal.classList.contains('hidden')) closeModal('blogDetailModal');
-                else if (D.blogModal && !D.blogModal.classList.contains('hidden')) closeModal('blogModal');
-                else if (D.loginModal && !D.loginModal.classList.contains('hidden')) closeModal('loginModal');
+    function _cardClick(e) {
+        // "展开阅读" 按钮 —— 内联展开/收起（不跳转）
+        var rm = e.target.closest('.read-more');
+        if (rm) {
+            e.stopPropagation();
+            var card = rm.closest('.blog-card');
+            if (!card) return;
+            var body = card.querySelector('.blog-body');
+            var isExpanded = card.classList.contains('expanded');
+            if (isExpanded) {
+                card.classList.remove('expanded');
+                rm.setAttribute('data-action', 'expand');
+                rm.innerHTML = '展开阅读 ↓';
+                if (body) body.scrollTop = 0;
+            } else {
+                card.classList.add('expanded');
+                rm.setAttribute('data-action', 'collapse');
+                rm.innerHTML = '收起内容 ↑';
             }
-            if (e.key === 'Enter' && D.loginModal && !D.loginModal.classList.contains('hidden')) adminLogin();
-            if ((e.ctrlKey||e.metaKey) && e.key === 's' && D.blogModal && !D.blogModal.classList.contains('hidden')) { e.preventDefault(); saveBlog(); }
+            return;
+        }
+        // 点击博客卡片 → 跳转阅读页
+        var c=e.target.closest('.blog-card'); if(!c)return;
+        if(e.target.closest('button')||e.target.closest('.blog-image'))return;
+        var id=parseInt(c.dataset.blogId,10);
+        if(id) location.href = 'read.html?post=' + id;
+    }
+
+    // ========== 留言板 ==========
+    function _buildGuestbookPanel() {
+        // 动态注入留言板面板到 #friends 的位置（替换友链占位）
+        var friendsPanel = $('#friends');
+        if (!friendsPanel) return;
+
+        // 替换友链面板为留言板
+        friendsPanel.id = 'guestbook';
+        friendsPanel.setAttribute('aria-labelledby', 'gbHeading');
+        friendsPanel.innerHTML = '<h2 class="panel-title" id="gbHeading" style="text-align:center">💬 留言板</h2>'
+            + '<div class="gb-write">'
+            + '<div class="form-row dual">'
+            + '<div class="form-field"><label for="gbAuthor">昵称 *</label><input type="text" id="gbAuthor" placeholder="你的昵称" maxlength="30" required></div>'
+            + '<div class="form-field"><label for="gbContact">联系方式（选填）</label><input type="text" id="gbContact" placeholder="QQ / 邮箱 / GitHub" maxlength="60"></div>'
+            + '</div>'
+            + '<div class="form-field"><label for="gbBody">留言内容 *</label><textarea id="gbBody" rows="4" placeholder="说点什么吧～" maxlength="800"></textarea><span class="char-count" id="gbTally">0 / 800</span></div>'
+            + '<button type="button" id="btnPostNote" class="rinui-btn primary">📝 提交留言</button>'
+            + '</div>'
+            + '<div id="noteWall" class="note-wall"></div>'
+            + '<div id="noteVoid" class="empty-state"><span class="empty-icon">💭</span><p class="empty-title">暂无留言</p><p class="empty-subtitle">成为第一个留言的人吧～</p></div>';
+
+        // 更新侧栏友链按钮为留言板
+        var friendsBtn = document.querySelector('.sidebar-btn[data-panel="friends"]');
+        if (friendsBtn) {
+            friendsBtn.dataset.panel = 'guestbook';
+            friendsBtn.textContent = ' 留言';
+            friendsBtn.classList.remove('disabled');
+            friendsBtn.removeAttribute('disabled');
+        }
+
+        // 重新缓存留言相关的DOM引用
+        E.gbAuthor = $('#gbAuthor');
+        E.gbContact = $('#gbContact');
+        E.gbBody = $('#gbBody');
+        E.gbTally = $('#gbTally');
+        E.btnPostNote = $('#btnPostNote');
+        E.noteWall = $('#noteWall');
+        E.noteVoid = $('#noteVoid');
+    }
+
+    function _submitNote() {
+        if (!E.gbAuthor || !E.gbBody) return;
+        var nick = E.gbAuthor.value.trim();
+        var contact = E.gbContact ? E.gbContact.value.trim() : '';
+        var msg = E.gbBody.value.trim();
+
+        if (!nick || nick.length < 2) { _pop('昵称至少需要2个字哦～','error'); E.gbAuthor.focus(); return; }
+        if (!msg) { _pop('说点什么吧～','error'); E.gbBody.focus(); return; }
+
+        var lastTs = 0;
+        g_noteHeap.forEach(function(n){ if(n.nick===nick&&n.ts>lastTs)lastTs=n.ts; });
+        if (Date.now() - lastTs < 30000) { _pop('发得太快了，过30秒再来吧～','error'); return; }
+
+        var cid = g_noteHeap.length ? Math.max.apply(null, g_noteHeap.map(function(n){ return n.cid; })) + 1 : 1;
+        var note = { cid: cid, nick: nick, msg: msg, contact: contact, ts: Date.now(), star: 0 };
+        g_noteHeap.unshift(note);
+        _dumpNotes(); _paintNotes();
+        E.gbBody.value = '';
+        if(E.gbTally)E.gbTally.textContent = '0 / 800';
+        E.gbAuthor.value = '';
+        if(E.gbContact)E.gbContact.value = '';
+        _pop('留言成功！感谢你的支持～','success');
+    }
+
+    function _paintNotes() {
+        if (!E.noteWall) return;
+        E.noteWall.innerHTML = '';
+        if (!g_noteHeap.length) { if(E.noteVoid)E.noteVoid.style.display=''; return; }
+        if(E.noteVoid)E.noteVoid.style.display='none';
+
+        g_noteHeap.forEach(function(n){
+            var slab = document.createElement('div');
+            slab.className = 'note-slab' + (n.star ? ' is-starred' : '');
+            var timeStr = new Date(n.ts).toLocaleString('zh-CN');
+            var starIcon = n.star ? ' ⭐' : '';
+            var avatarHTML = n.avatar
+                ? '<img src="' + _safeAttr(n.avatar) + '" alt="" class="note-avatar" loading="lazy" onerror="this.style.display=\'none\'">'
+                : '<span class="note-avatar" style="display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:var(--rinui-tag-text)">' + _safeHTML(n.nick.charAt(0).toUpperCase()) + '</span>';
+            var contactHTML = n.contact ? '<div class="note-contact">📬 ' + _safeHTML(n.contact) + '</div>' : '';
+            var ghLink = n.githubUser ? ' <a href="https://github.com/' + _safeAttr(n.githubUser) + '" target="_blank" rel="noopener noreferrer" class="note-gh-link" title="GitHub 主页">🐙</a>' : '';
+            slab.innerHTML = '<div class="note-top"><div class="note-top-left">' + avatarHTML + '<span class="note-author">' + _safeHTML(n.nick) + starIcon + ghLink + '</span></div><span class="note-time">' + timeStr + '</span></div>'
+                + '<div class="note-body">' + _safeHTML(n.msg) + '</div>' + contactHTML;
+            E.noteWall.appendChild(slab);
         });
     }
 
-    // ==================== 启动 ====================
-    async function init() {
-        var fp = tryConnectFlask();
-        loadBlogs(); checkLogin(); renderBlogs(); visitorCount(); bindEvents();
-        await fp;
-        if (apiOnline) { await syncFromFlask(); var st = localStorage.getItem('apiAuthToken'); if (st) { apiToken = st; if (await FlaskApi.checkAuth()) { isAdmin = true; updateAdminUI(); } else { apiToken = ''; localStorage.removeItem('apiAuthToken'); } } }
+    function _updateTallyNote() { if(E.gbTally){E.gbTally.textContent=E.gbBody.value.length+' / 800';} }
+
+    // ========== 灯箱 ==========
+    window.openLightbox = function(src) { var ex=document.querySelector('.lightbox-overlay'); if(ex)ex.remove(); var o=document.createElement('div'); o.className='lightbox-overlay'; o.innerHTML='<img src="'+_safeAttr(src)+'" alt="放大查看">'; o.addEventListener('click',function(){o.remove();}); document.body.appendChild(o); };
+
+    // ========== 打字机 ==========
+    var _ti=0,_tdel=false,_tTimer=null;
+    function _typeLoop() {
+        clearTimeout(_tTimer); if(!E.typeWriter)return;
+        if(!_tdel){ if(_ti<TYPE_LINE.length){E.typeWriter.textContent+=TYPE_LINE[_ti];_ti++;_tTimer=setTimeout(_typeLoop,TYPE_TICK);}else{_tdel=true;_tTimer=setTimeout(_typeLoop,TYPE_REST);} }
+        else{ if(_ti>0){E.typeWriter.textContent=TYPE_LINE.slice(0,_ti-1);_ti--;_tTimer=setTimeout(_typeLoop,TYPE_DEL);}else{_tdel=false;_tTimer=setTimeout(_typeLoop,TYPE_GAP);} }
+    }
+
+    // ========== storage 事件 ==========
+    function _onStoreChange(evt) {
+        if(!evt.key)return;
+        switch(evt.key){
+            case BOX_KEY: _loadPosts().then(function(){ _paintPosts(); }); break;
+            case NOTE_KEY: _loadNotes(); _paintNotes(); break;
+            case EYE_KEY: _eyeShow(null); break;
+        }
+    }
+
+    // ========== 事件绑线 ==========
+    function _wireItUp() {
+        _wireNav();
+
+        E.blogSearch.addEventListener('input', _debounce(_paintPosts, 300));
+        E.blogList.addEventListener('click', _cardClick);
+        E.detailShareBtn.addEventListener('click', function(){
+            if(!watchingId)return;
+            var link=location.origin+location.pathname.replace(/[^/]*$/,'')+'read.html?post='+watchingId;
+            navigator.clipboard.writeText(link).then(function(){_pop('链接已复制','success');}).catch(function(){_pop('复制失败','error');});
+        });
+        $$('.modal').forEach(function(m){ m.addEventListener('click', _backdropClick); });
+
+        // 留言板事件 (在 _buildGuestbookPanel 之后绑定)
+        if (E.btnPostNote) E.btnPostNote.addEventListener('click', _submitNote);
+        if (E.gbBody) E.gbBody.addEventListener('input', _updateTallyNote);
+
+        window.addEventListener('keydown', function(e){
+            if(e.key==='Escape'){
+                if(E.detailModal&&!E.detailModal.classList.contains('hidden'))window.closeModal('blogDetailModal');
+            }
+        });
+
+        window.addEventListener('storage', _onStoreChange, false);
+
+        // 读取 URL 参数：?post=xxx 跳转到阅读页
+        var params=new URLSearchParams(location.search);
+        var pp=params.get('post'); if(pp){ location.replace('read.html?post='+encodeURIComponent(pp)); return; }
+    }
+
+    // ========== 入口 ==========
+    async function _kickstart() {
+        _loadNotes();
+        _buildGuestbookPanel(); // 动态构建留言板
+        _paintNotes();
+        _eyeBump();
+        _wireItUp();
+
+        // 加载博客数据（从 JSON 文件）
+        await _loadPosts();
+        _paintPosts();
     }
 
     window.addEventListener('DOMContentLoaded', async function() {
         document.body.classList.add('loaded');
-        await init();
-        typing();
-        startBgAutoRefresh();
+        await _kickstart();
+        _typeLoop();
+        _startBgLoop();
     });
 
-    window.editBlog = window.editBlog; window.deleteBlog = window.deleteBlog;
-    window.saveBlog = window.saveBlog; window.openAddBlog = window.openAddBlog;
-    window.adminLogin = window.adminLogin; window.adminLogout = window.adminLogout;
-    window.openModal = window.openModal; window.closeModal = window.closeModal;
+    // ========== 暴露全局 ==========
+    window.openModal = window.openModal;
+    window.closeModal = window.closeModal;
+    window.openLightbox = window.openLightbox;
+    window._resetEye = window._resetEye;
 
 })();
