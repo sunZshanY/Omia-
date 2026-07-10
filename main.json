@@ -1,0 +1,21 @@
+{
+  "version": "4.0",
+  "updatedAt": "2026-07-10T12:00:00Z",
+  "posts": [
+    {
+      "id": 1,
+      "title": "Hello World",
+      "date": "2026-07-02",
+      "content": "Hello World！这是第一篇测试博客...",
+      "tags": ["测试", "博客", "HelloWorld"]
+    },
+    {
+      "id": 2,
+      "title": "我的新文章",
+      "date": "2026-07-10",
+      "content": "这里是文章正文。\n支持多行换行。",
+      "tags": ["编程"]
+    }
+  ]
+}
+
