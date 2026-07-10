@@ -253,9 +253,25 @@
         function safeHTML(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
         function safeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-        // 读取文章：优先从 JSON 文件，降级到 localStorage 缓存
+        // 读取文章：优先检查管理员本地发布，再尝试 JSON 文件，降级到 localStorage 缓存
         function getPost(id, cb) {
-            // 先尝试从 JSON 文件加载
+            var PUB_FLAG = 'omi_published';
+
+            // 优先检查管理员是否发布了本地更新
+            if (localStorage.getItem(PUB_FLAG) === '1') {
+                try {
+                    var localRaw = localStorage.getItem(BOX_KEY);
+                    if (localRaw) {
+                        var localPosts = JSON.parse(localRaw);
+                        if (Array.isArray(localPosts)) {
+                            var localPost = localPosts.find(function(b) { return b.id === id; }) || null;
+                            if (localPost) { cb(localPost); return; }
+                        }
+                    }
+                } catch(e) { /* 回退 */ }
+            }
+
+            // 尝试从 JSON 文件加载
             fetch(DATA_URL + '?_t=' + Date.now())
                 .then(function(r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);

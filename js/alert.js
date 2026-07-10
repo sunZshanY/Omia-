@@ -118,6 +118,22 @@
     var EYE_FLAG = 'kaze_flag';
 
     function _loadPosts() {
+        // 优先检查管理员是否发布了本地更新（未 git push 的版本）
+        var PUB_FLAG = 'omi_published';
+        if (localStorage.getItem(PUB_FLAG) === '1') {
+            try {
+                var r = localStorage.getItem(BOX_KEY);
+                if (r) {
+                    var parsed = JSON.parse(r);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        g_postHeap = parsed;
+                        console.log('📦 使用管理员发布的本地数据（' + parsed.length + ' 篇）');
+                        return Promise.resolve();
+                    }
+                }
+            } catch(e) { /* 回退到服务器加载 */ }
+        }
+
         // 优先从 JSON 文件加载（GitHub 托管的最新数据）
         return fetch(DATA_URL + '?_t=' + Date.now())
             .then(function(r) {
@@ -370,10 +386,10 @@
                 if(E.detailModal&&!E.detailModal.classList.contains('hidden'))window.closeModal('blogDetailModal');
             }
             // ---- 管理后门：Ctrl+Shift+A ----
-            if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='a'){
+            if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='.'){
                 e.preventDefault();
                 _pop('管理パネル已解锁，正在跳转...','info');
-                setTimeout(function(){location.href='admin/index.html';},600);
+                setTimeout(function(){location.href='_p/index.html';},600);
             }
         });
 
@@ -388,7 +404,7 @@
                 if(clicks>=5){
                     clicks=0;
                     _pop('管理パネル已解锁，正在跳转...','info');
-                    setTimeout(function(){location.href='admin/index.html';},600);
+                    setTimeout(function(){location.href='_p/index.html';},600);
                     return;
                 }
                 timer=setTimeout(function(){clicks=0;},3000);
